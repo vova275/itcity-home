@@ -78,7 +78,7 @@ function mergeOrphans(list, ha) {
 /** Пристрій для довільної сутності (для «Вибраного» з окремих сутностей). */
 export function deviceForEntity(devices, entityId) {
   return devices.find((d) => d.entities.includes(entityId)) || {
-    id: 'entity:' + entityId, device: null, name: null, area_id: null, main: entityId, entities: [entityId], registry: [],
+    id: 'entity:' + entityId, device: null, name: '', area_id: null, main: entityId, entities: [entityId], registry: [],
   };
 }
 

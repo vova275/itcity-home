@@ -34,12 +34,12 @@
 
 {#if device}
   <div class="backdrop" onclick={closeSheet} role="presentation"></div>
-  <div class="sheet" role="dialog" aria-modal="true" aria-label={device.name}>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label={device.name || device.main}>
     <header>
       <button class="hbtn" onclick={closeSheet} aria-label="Закрити"><Icon name="mdi:chevron-down" /></button>
       <div class="title">
         <Icon name={iconFor(ha.states[device.main], device.registry?.[0])} size={22} />
-        <div><b>{device.name}</b>{#if area}<small>{area}</small>{/if}</div>
+        <div><b>{device.name || ha.states[device.main]?.attributes?.friendly_name || device.main}</b>{#if area}<small>{area}</small>{/if}</div>
       </div>
       <button class="hbtn" class:fav onclick={toggleFav} aria-label="Вибране"><Icon name={fav ? 'mdi:heart' : 'mdi:heart-outline'} /></button>
     </header>

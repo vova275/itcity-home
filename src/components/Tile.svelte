@@ -42,7 +42,7 @@
       </span>
     {/if}
   </div>
-  <div class="name">{name || device.name}</div>
+  <div class="name">{name || device.name || st?.attributes?.friendly_name || device.main}</div>
   <div class="state" class:alert={unavailable || low}>{unavailable && !show ? '⚠ Недоступно' : stateText(shown)}</div>
 </button>
 
