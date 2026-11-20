@@ -1,0 +1,65 @@
+<script>
+  // Енергія: лічильник по фазах, облік день/ніч у кВт·год і гривнях, графік.
+  import Icon from '../components/Icon.svelte';
+  import Chart from '../components/Chart.svelte';
+  import { ha } from '../lib/ha.svelte.js';
+  import { num } from '../lib/format.js';
+  import { openDevice } from '../lib/ui.svelte.js';
+
+  const v = (e) => ha.states[e]?.state;
+  const n = (e, d) => (isFinite(Number(v(e))) ? num(v(e), d) : '—');
+  const phases = [1, 2, 3];
+  const pseudo = {
+    id: 'energy', device: null, name: 'Лічильник', area_id: null, main: 'sensor.lichylnyk_potuzhnist', registry: [],
+    entities: ['sensor.lichylnyk_potuzhnist', ...phases.flatMap((p) => [`sensor.lichylnyk_potuzhnist_l${p}`, `sensor.lichylnyk_napruga_l${p}`, `sensor.lichylnyk_strum_l${p}`]),
+      'sensor.lichylnyk_enerhiia', 'sensor.energy_month_day', 'sensor.energy_month_night', 'sensor.vartist_elektroenergii_za_misiats'],
+  };
+  let chartEntity = $state('sensor.lichylnyk_potuzhnist');
+  const tariffDay = $derived(v('sensor.potochnii_tarif') === 'День');
+</script>
+
+<h1>Енергія</h1>
+
+<button class="now" onclick={() => openDevice(pseudo)}>
+  <span class="ico"><Icon name="mdi:meter-electric-outline" size={34} /></span>
+  <span><b>{n('sensor.lichylnyk_potuzhnist', 0)} Вт</b><small>зараз · лічильник {n('sensor.lichylnyk_enerhiia', 1)} кВт·год</small></span>
+  <span class="tariff" class:night={!tariffDay}><Icon name={tariffDay ? 'mdi:weather-sunny' : 'mdi:weather-night'} size={18} />{n('sensor.tsina_elektroenergii_zaraz', 2)} грн</span>
+</button>
+
+<div class="phases">
+  {#each phases as p}
+    <div class="ph">
+      <div class="pt">L{p}</div>
+      <div class="pw">{n(`sensor.lichylnyk_potuzhnist_l${p}`, 0)}<span> Вт</span></div>
+      <div class="pm">{n(`sensor.lichylnyk_napruga_l${p}`, 1)} В · {n(`sensor.lichylnyk_strum_l${p}`, 2)} А</div>
+    </div>
+  {/each}
+</div>
+
+<h2>Облік</h2>
+<div class="acc">
+  <div class="c"><small>Сьогодні</small><b>{n('sensor.vartist_elektroenergii_za_dobu', 2)} грн</b><span>☀ {n('sensor.energy_day_day', 1)} · ☾ {n('sensor.energy_day_night', 1)} кВт·год</span></div>
+  <div class="c"><small>Цей місяць</small><b>{n('sensor.vartist_elektroenergii_za_misiats', 2)} грн</b><span>☀ {n('sensor.energy_month_day', 1)} · ☾ {n('sensor.energy_month_night', 1)} кВт·год</span></div>
+</div>
+
+<h2>Графік</h2>
+<div class="chartbox"><Chart device={pseudo} bind:entity={chartEntity} /></div>
+
+<style>
+  h1 { font-size: 34px; font-weight: 800; margin: 6px 2px 16px; }
+  h2 { font-size: 22px; font-weight: 800; margin: 24px 2px 10px; }
+  .now { all: unset; cursor: pointer; display: flex; align-items: center; gap: 14px; background: var(--tile); border-radius: var(--r-tile); padding: 16px; width: 100%; box-sizing: border-box; }
+  .now > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; }
+  .now b { font-size: 30px; } .now small { color: var(--muted); }
+  .ico { width: 56px; height: 56px; border-radius: 16px; background: rgba(48,209,88,.18); color: #30d158; display: grid; place-items: center; }
+  .tariff { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; background: rgba(255,214,10,.18); color: #ffd60a; font-size: 13px; }
+  .tariff.night { background: rgba(94,92,230,.2); color: #a5a3ff; }
+  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+  .ph { background: var(--tile); border-radius: 18px; padding: 12px; }
+  .pt { color: var(--muted); font-weight: 700; } .pw { font-size: 22px; font-weight: 700; } .pw span { font-size: 13px; color: var(--muted); }
+  .pm { font-size: 12px; color: var(--muted); }
+  .acc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .c { background: var(--tile); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+  .c small { color: var(--muted); } .c b { font-size: 22px; } .c span { font-size: 12px; color: var(--muted); }
+  .chartbox { background: var(--tile); border-radius: var(--r-tile); padding: 14px; }
+</style>

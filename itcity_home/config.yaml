@@ -1,0 +1,20 @@
+name: ITCITY Home
+version: "0.1.0"
+slug: itcity_home
+description: Зручний дашборд у стилі Homey — кімнати, плитки, картки пристроїв з графіками, графік відключень світла.
+url: https://github.com/vova275/itcity-home
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: application
+boot: auto
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:home-heart
+panel_title: Дім
+homeassistant_api: true
+ports:
+  8099/tcp: null
+ports_description:
+  8099/tcp: "Прямий доступ (без логіну HA — вмикай лише в довіреній мережі)"
