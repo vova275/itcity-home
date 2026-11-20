@@ -3,6 +3,7 @@ export const ui = $state({
   room: null,            // area_id для перегляду кімнати
   sheet: null,           // відкритий пристрій { device }
   sheetTab: 'control',
+  list: null,            // { title, entities: () => [...], empty }
 });
 
 export function openDevice(device) {

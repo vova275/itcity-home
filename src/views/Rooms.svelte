@@ -51,5 +51,5 @@
   h1 { font-size: 30px; font-weight: 800; margin: 22px 2px 4px; }
   h2 { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; margin: 18px 2px 10px; }
   .ai { width: 34px; height: 34px; border-radius: 10px; background: var(--tile); display: grid; place-items: center; }
-  .tiles { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 10px; }
+  .tiles { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: var(--gap); }
 </style>

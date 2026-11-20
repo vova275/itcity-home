@@ -46,12 +46,13 @@
 <style>
   .tile {
     all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column;
-    background: var(--tile); border-radius: var(--r-tile); padding: 14px; min-height: 128px; aspect-ratio: 1 / 1;
+    background: var(--tile); border-radius: var(--r-tile); padding: 14px 14px 13px; min-height: 136px; min-width: 0;
     transition: background .2s, transform .1s; position: relative; overflow: hidden;
   }
   .tile:active { transform: scale(.97); }
   .tile.on { background: var(--tile-on); }
-  .top { display: flex; justify-content: space-between; align-items: flex-start; flex: 1; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; flex: 1; min-height: 44px; }
+  @media (min-width: 600px) { .tile { aspect-ratio: 1 / 1; } }
   .ico { color: var(--text); opacity: .9; }
   .ico.on { color: var(--accent-warm); opacity: 1; }
   .pw {
@@ -61,7 +62,7 @@
   .pw.on { background: var(--accent-soft); color: var(--accent); }
   .pw.busy { opacity: .5; }
   .name {
-    font-size: 16px; font-weight: 600; line-height: 1.2; margin-top: 8px;
+    font-size: 15px; font-weight: 600; line-height: 1.22; margin-top: 10px; word-break: break-word;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .state { font-size: 13px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

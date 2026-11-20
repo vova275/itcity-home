@@ -2,6 +2,7 @@
   // Каркас: телефон — нижня панель; планшет/ПК — бокове меню. Тема темна/світла/авто.
   import Icon from './components/Icon.svelte';
   import DeviceSheet from './components/DeviceSheet.svelte';
+  import ListSheet from './components/ListSheet.svelte';
   import Home from './views/Home.svelte';
   import Rooms from './views/Rooms.svelte';
   import Energy from './views/Energy.svelte';
@@ -16,7 +17,7 @@
     'light.pidsvitka_kukhnia', 'switch.vulytsia_svitlo', 'sensor.dytiacha_temperatura', 'sensor.spalnia_temperatura',
     'sensor.gostova_temperatura', 'sensor.zal_temperatura', 'sensor.goryshche_temperatura', 'climate.kondytsioner',
     'cover.vorota', 'sensor.garazh_temperatura', 'sensor.lichylnyk_potuzhnist', 'fan.prana_dytiacha', 'sensor.kotel_temperatura_podachi',
-    'climate.spalnia', 'climate.gostova', 'climate.dytiacha', 'alarm_control_panel.okhorona',
+    'climate.spalnia', 'climate.gostova', 'climate.dytiacha', 'alarm_control_panel.okhorona', 'camera.vorota',
   ];
 
   connect();
@@ -56,6 +57,7 @@
   </nav>
 </div>
 
+<ListSheet />
 <DeviceSheet />
 
 <style>
