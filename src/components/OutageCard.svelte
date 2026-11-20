@@ -71,8 +71,8 @@
   .off .ico { background: rgba(255,69,58,.2); color: #ff453a; }
   .big { font-size: 18px; font-weight: 700; } .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
   .day { margin: 12px 0 6px; font-size: 13px; } .day span { color: var(--muted); }
-  .grid { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
-  @media (max-width: 520px) { .grid { grid-template-columns: repeat(16, 1fr); } }
+  .grid { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; }
+  @media (max-width: 520px) { .grid { grid-template-columns: repeat(12, minmax(0, 1fr)); } }
   .cell { height: 22px; border-radius: 4px; position: relative; }
   .cell em { position: absolute; top: -1px; left: 2px; font-size: 9px; font-style: normal; color: rgba(255,255,255,.75); }
   .cell.on { background: rgba(48,209,88,.55); }

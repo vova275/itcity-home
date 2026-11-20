@@ -43,8 +43,8 @@
 </div>
 
 <style>
-  .sum { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
-  @media (min-width: 900px) { .sum { grid-template-columns: repeat(3, 1fr); } }
+  .sum { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+  @media (min-width: 900px) { .sum { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .it { all: unset; cursor: pointer; display: flex; align-items: center; gap: 12px; background: var(--tile); border-radius: 18px; padding: 14px; min-width: 0; min-height: 64px; box-sizing: border-box; }
   .it:active { transform: scale(.98); }
   .i { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--pw); }

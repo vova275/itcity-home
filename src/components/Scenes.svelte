@@ -53,13 +53,13 @@
   .btns { display: flex; gap: 8px; }
   .eb { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: var(--tile); font-size: 14px; }
   .eb.on { background: var(--accent); color: #fff; }
-  .scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--gap); }
+  .scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); gap: var(--gap); }
   .sc { all: unset; cursor: pointer; position: relative; display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 18px;
     background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, var(--tile)), var(--tile)); min-height: 56px; }
   .sc:active { transform: scale(.97); }
   .sc.ok { background: color-mix(in srgb, #30d158 35%, var(--tile)); }
   .i { width: 38px; height: 38px; border-radius: 12px; background: var(--pw); display: grid; place-items: center; flex: none; }
-  .n { font-size: 14px; font-weight: 600; line-height: 1.2; }
+  .n { font-size: 14px; font-weight: 600; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
   .x { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; background: var(--danger); color: #fff; display: grid; place-items: center; }
   .muted { color: var(--muted); grid-column: 1 / -1; }
   .picker { margin-top: 10px; }

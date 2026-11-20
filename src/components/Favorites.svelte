@@ -83,8 +83,8 @@
   .eb { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: var(--tile); font-size: 14px; }
   .eb.on { background: var(--accent); color: #fff; }
   .hint { color: var(--muted); font-size: 13px; margin: -4px 2px 10px; }
-  .tiles { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: var(--gap); }
-  .cell { position: relative; touch-action: auto; }
+  .tiles { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: var(--gap); }
+  .cell { position: relative; touch-action: auto; min-width: 0; }
   .edit .cell { touch-action: none; cursor: grab; animation: wiggle .35s ease-in-out infinite alternate; }
   .edit .cell :global(.tile) { pointer-events: none; }
   .edit .cell:nth-child(2n) { animation-delay: .17s; }

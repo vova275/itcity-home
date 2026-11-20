@@ -32,6 +32,6 @@
   header { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 8px; font-size: 20px; }
   header button { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
   .body { overflow-y: auto; padding: 8px 16px 20px; }
-  .tiles { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: var(--gap); }
+  .tiles { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: var(--gap); }
   .muted { color: var(--muted); }
 </style>

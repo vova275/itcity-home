@@ -54,11 +54,11 @@
   .ico { width: 56px; height: 56px; border-radius: 16px; background: rgba(48,209,88,.18); color: #30d158; display: grid; place-items: center; }
   .tariff { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; background: rgba(255,214,10,.18); color: #ffd60a; font-size: 13px; }
   .tariff.night { background: rgba(94,92,230,.2); color: #a5a3ff; }
-  .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+  .phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
   .ph { background: var(--tile); border-radius: 18px; padding: 12px; }
   .pt { color: var(--muted); font-weight: 700; } .pw { font-size: 22px; font-weight: 700; } .pw span { font-size: 13px; color: var(--muted); }
   .pm { font-size: 12px; color: var(--muted); }
-  .acc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .acc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .c { background: var(--tile); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
   .c small { color: var(--muted); } .c b { font-size: 22px; } .c span { font-size: 12px; color: var(--muted); }
   .chartbox { background: var(--tile); border-radius: var(--r-tile); padding: 14px; }

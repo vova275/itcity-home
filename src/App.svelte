@@ -66,7 +66,7 @@
 
 <style>
   .app { display: flex; min-height: 100vh; }
-  main { flex: 1; padding: calc(16px + env(safe-area-inset-top)) 16px 96px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  main { flex: 1; min-width: 0; padding: calc(16px + env(safe-area-inset-top)) 16px 96px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
   .side { display: none; }
   .bottom {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(5, 1fr);
