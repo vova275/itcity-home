@@ -4,18 +4,18 @@
   import Tile from './Tile.svelte';
   import { ha } from '../lib/ha.svelte.js';
   import { buildDevices, deviceForEntity } from '../lib/model.js';
-  import { ui } from '../lib/ui.svelte.js';
+  import { ui, back } from '../lib/ui.svelte.js';
 
   const devices = $derived(buildDevices(ha));
   const list = $derived(ui.list ? ui.list.entities().map((e) => ({ e, d: deviceForEntity(devices, e) })) : []);
 </script>
 
 {#if ui.list}
-  <div class="backdrop" onclick={() => (ui.list = null)} role="presentation"></div>
+  <div class="backdrop" onclick={back} role="presentation"></div>
   <div class="sheet" role="dialog" aria-modal="true">
     <header>
       <b>{ui.list.title}</b>
-      <button onclick={() => (ui.list = null)} aria-label="Закрити"><Icon name="mdi:close" /></button>
+      <button onclick={back} aria-label="Закрити"><Icon name="mdi:close" /></button>
     </header>
     <div class="body">
       {#if list.length}

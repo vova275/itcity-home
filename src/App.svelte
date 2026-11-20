@@ -8,7 +8,7 @@
   import Energy from './views/Energy.svelte';
   import More from './views/More.svelte';
   import { ha, settings, connect, loadSettings, saveSettings } from './lib/ha.svelte.js';
-  import { ui } from './lib/ui.svelte.js';
+  import { ui, setView } from './lib/ui.svelte.js';
 
   const NAV = [['home', 'mdi:home-variant', 'Дім'], ['rooms', 'mdi:view-grid', 'Кімнати'], ['energy', 'mdi:lightning-bolt', 'Енергія'], ['more', 'mdi:dots-horizontal', 'Ще']];
 
@@ -35,7 +35,7 @@
   <aside class="side">
     <div class="brand"><Icon name="mdi:home-heart" size={28} color="var(--accent)" /><b>Дім</b></div>
     {#each NAV as [id, icon, label]}
-      <button class:sel={ui.view === id} onclick={() => (ui.view = id)}><Icon name={icon} />{label}</button>
+      <button class:sel={ui.view === id} onclick={() => setView(id)}><Icon name={icon} />{label}</button>
     {/each}
     <div class="conn" class:ok={ha.connected}>{ha.connected ? 'На зв’язку з HA' : 'Підключення…'}</div>
   </aside>
@@ -52,7 +52,7 @@
 
   <nav class="bottom">
     {#each NAV as [id, icon, label]}
-      <button class:sel={ui.view === id} onclick={() => (ui.view = id)}><Icon name={icon} size={26} /><span>{label}</span></button>
+      <button class:sel={ui.view === id} onclick={() => setView(id)}><Icon name={icon} size={26} /><span>{label}</span></button>
     {/each}
   </nav>
 </div>

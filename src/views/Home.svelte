@@ -7,7 +7,7 @@
   import { ha, settings } from '../lib/ha.svelte.js';
   import { buildDevices, deviceForEntity } from '../lib/model.js';
   import { greeting, WEATHER_UK, num } from '../lib/format.js';
-  import { ui } from '../lib/ui.svelte.js';
+  import { setView } from '../lib/ui.svelte.js';
 
   const devices = $derived(buildDevices(ha));
   const favs = $derived(settings.favorites.filter((e) => ha.states[e]).map((e) => deviceForEntity(devices, e)));
@@ -43,7 +43,7 @@
   <div class="empty">
     <Icon name="mdi:heart-outline" size={32} />
     <p>Відкрий будь-який пристрій у «Кімнатах» і натисни ♥, щоб додати його сюди.</p>
-    <button onclick={() => (ui.view = 'rooms')}>До кімнат</button>
+    <button onclick={() => setView('rooms')}>До кімнат</button>
   </div>
 {/if}
 

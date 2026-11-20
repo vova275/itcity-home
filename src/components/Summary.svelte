@@ -2,7 +2,7 @@
   // Рядок зведень як у Homey: Освітлення, Охорона, Енергія, Клімат, Котел, Батарейки.
   import Icon from './Icon.svelte';
   import { ha } from '../lib/ha.svelte.js';
-  import { ui, openDevice } from '../lib/ui.svelte.js';
+  import { ui, openDevice, openList, setView } from '../lib/ui.svelte.js';
   import { buildDevices, deviceForEntity } from '../lib/model.js';
   import { num } from '../lib/format.js';
 
@@ -18,13 +18,13 @@
 
   const devices = $derived(buildDevices(ha));
   const open = (e) => openDevice(deviceForEntity(devices, e));
-  const list = (title, fn, empty, show = false) => (ui.list = { title, entities: fn, empty, show });
+  const list = (title, fn, empty, show = false) => openList({ title, entities: fn, empty, show });
   const all = () => Object.values(ha.states);
   const items = $derived([
     { icon: 'mdi:lightbulb-group', color: '#ffd60a', name: 'Освітлення', val: `Увімкнено: ${lightsOn}`,
       act: () => list('Освітлення', () => all().filter((s) => s.entity_id.startsWith('light.')).map((s) => s.entity_id)) },
     { icon: 'mdi:shield-home', color: alarm === 'disarmed' ? '#8e8e93' : '#30d158', name: 'Охорона', val: ALARM[alarm] || '—', act: () => open('alarm_control_panel.okhorona') },
-    { icon: 'mdi:leaf', color: '#30d158', name: 'Енергія', val: isFinite(val('sensor.lichylnyk_potuzhnist')) ? `${num(val('sensor.lichylnyk_potuzhnist') / 1000, 2)} kW` : '—', act: () => (ui.view = 'energy') },
+    { icon: 'mdi:leaf', color: '#30d158', name: 'Енергія', val: isFinite(val('sensor.lichylnyk_potuzhnist')) ? `${num(val('sensor.lichylnyk_potuzhnist') / 1000, 2)} kW` : '—', act: () => setView('energy') },
     { icon: 'mdi:thermometer', color: '#ff9f0a', name: 'Клімат', val: temps.length ? `${num(avg(temps), 1)}° | ${Math.round(avg(hums))}%` : '—',
       act: () => list('Клімат', () => [...all().filter((s) => s.entity_id.startsWith('climate.')), ...all().filter((s) => s.entity_id.endsWith('_temperatura'))].map((s) => s.entity_id), '', true) },
     { icon: 'mdi:fire', color: '#ff6b35', name: 'Котел', act: () => open('sensor.kotel_temperatura_podachi'), val: isFinite(val('sensor.kotel_temperatura_podachi')) ? `${num(val('sensor.kotel_temperatura_podachi'), 1)}° • ${num(val('sensor.kotel_tysk'), 1)} бар` : '—' },

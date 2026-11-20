@@ -2,6 +2,7 @@
   // Камера на головній: знімок оновлюється кожні 5 с; тап — живе відео (MJPEG) на весь екран.
   import Icon from './Icon.svelte';
   import { ha } from '../lib/ha.svelte.js';
+  import { pushLayer, back } from '../lib/ui.svelte.js';
 
   let { entity, name = null } = $props();
   const st = $derived(ha.states[entity]);
@@ -16,14 +17,14 @@
 </script>
 
 {#if st}
-  <button class="cam" onclick={() => (full = true)}>
+  <button class="cam" onclick={() => { full = true; pushLayer(() => (full = false)); }}>
     <img src={snap} alt={name || st.attributes.friendly_name} loading="lazy" />
     <span class="lbl"><Icon name="mdi:cctv" size={18} />{name || st.attributes.friendly_name}<i class="dot"></i></span>
   </button>
   {#if full}
     <div class="full" role="dialog" aria-modal="true">
       <img src={live} alt="наживо" />
-      <button class="x" onclick={() => (full = false)} aria-label="Закрити"><Icon name="mdi:close" /></button>
+      <button class="x" onclick={back} aria-label="Закрити"><Icon name="mdi:close" /></button>
     </div>
   {/if}
 {/if}
