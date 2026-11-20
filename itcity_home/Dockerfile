@@ -10,7 +10,7 @@ RUN npm ci --no-audit --no-fund && npm run build && npm prune --omit=dev
 FROM node:22-alpine
 WORKDIR /app
 COPY --from=build /src/dist ./dist
-COPY --from=build /src/server.js /src/package.json ./
+COPY --from=build /src/server.js /src/climate.js /src/package.json ./
 COPY --from=build /src/node_modules ./node_modules
 ENV PORT=8099 NODE_ENV=production
 CMD ["node", "server.js"]
