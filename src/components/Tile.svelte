@@ -8,9 +8,12 @@
   import { isOn, domainOf, TOGGLE_DOMAINS } from '../lib/model.js';
   import { openDevice } from '../lib/ui.svelte.js';
 
-  let { device, name = null, icon = null } = $props();
+  // show — показати стан іншої сутності пристрою (напр. заряд батареї в списку «Батарейки»)
+  let { device, name = null, icon = null, show = null } = $props();
 
   const st = $derived(ha.states[device.main]);
+  const shown = $derived(show ? ha.states[show] : st);
+  const low = $derived(shown?.attributes?.device_class === 'battery' && Number(shown.state) < 25);
   const reg = $derived(device.registry?.find((r) => r.entity_id === device.main));
   const on = $derived(isOn(st));
   const dom = $derived(domainOf(device.main));
@@ -31,7 +34,7 @@
 
 <button class="tile" class:on class:unavailable onclick={() => openDevice(device)}>
   <div class="top">
-    <span class="ico" class:on><Icon name={icon || iconFor(st, reg)} size={30} /></span>
+    <span class="ico" class:on><Icon name={icon || (show ? iconFor(shown) : iconFor(st, reg))} size={30} /></span>
     {#if canToggle}
       <span class="pw" class:on class:busy role="button" tabindex="0" aria-label="Увімкнути/вимкнути"
             onclick={toggle} onkeydown={(e) => e.key === 'Enter' && toggle(e)}>
@@ -40,7 +43,7 @@
     {/if}
   </div>
   <div class="name">{name || device.name}</div>
-  <div class="state" class:alert={unavailable}>{unavailable ? '⚠ Недоступно' : stateText(st)}</div>
+  <div class="state" class:alert={unavailable || low}>{unavailable && !show ? '⚠ Недоступно' : stateText(shown)}</div>
 </button>
 
 <style>

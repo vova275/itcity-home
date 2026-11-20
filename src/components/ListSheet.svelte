@@ -7,7 +7,7 @@
   import { ui } from '../lib/ui.svelte.js';
 
   const devices = $derived(buildDevices(ha));
-  const list = $derived(ui.list ? ui.list.entities().map((e) => deviceForEntity(devices, e)) : []);
+  const list = $derived(ui.list ? ui.list.entities().map((e) => ({ e, d: deviceForEntity(devices, e) })) : []);
 </script>
 
 {#if ui.list}
@@ -19,7 +19,7 @@
     </header>
     <div class="body">
       {#if list.length}
-        <div class="tiles">{#each list as d (d.main)}<Tile device={d} />{/each}</div>
+        <div class="tiles">{#each list as { e, d } (e)}<Tile device={d} show={ui.list.show ? e : null} />{/each}</div>
       {:else}<p class="muted">{ui.list.empty || 'Нічого немає'}</p>{/if}
     </div>
   </div>

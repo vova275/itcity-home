@@ -18,7 +18,7 @@
 
   const devices = $derived(buildDevices(ha));
   const open = (e) => openDevice(deviceForEntity(devices, e));
-  const list = (title, fn, empty) => (ui.list = { title, entities: fn, empty });
+  const list = (title, fn, empty, show = false) => (ui.list = { title, entities: fn, empty, show });
   const all = () => Object.values(ha.states);
   const items = $derived([
     { icon: 'mdi:lightbulb-group', color: '#ffd60a', name: 'Освітлення', val: `Увімкнено: ${lightsOn}`,
@@ -26,10 +26,10 @@
     { icon: 'mdi:shield-home', color: alarm === 'disarmed' ? '#8e8e93' : '#30d158', name: 'Охорона', val: ALARM[alarm] || '—', act: () => open('alarm_control_panel.okhorona') },
     { icon: 'mdi:leaf', color: '#30d158', name: 'Енергія', val: isFinite(val('sensor.lichylnyk_potuzhnist')) ? `${num(val('sensor.lichylnyk_potuzhnist') / 1000, 2)} kW` : '—', act: () => (ui.view = 'energy') },
     { icon: 'mdi:thermometer', color: '#ff9f0a', name: 'Клімат', val: temps.length ? `${num(avg(temps), 1)}° | ${Math.round(avg(hums))}%` : '—',
-      act: () => list('Клімат', () => [...all().filter((s) => s.entity_id.startsWith('climate.')), ...all().filter((s) => s.entity_id.endsWith('_temperatura'))].map((s) => s.entity_id)) },
+      act: () => list('Клімат', () => [...all().filter((s) => s.entity_id.startsWith('climate.')), ...all().filter((s) => s.entity_id.endsWith('_temperatura'))].map((s) => s.entity_id), '', true) },
     { icon: 'mdi:fire', color: '#ff6b35', name: 'Котел', act: () => open('sensor.kotel_temperatura_podachi'), val: isFinite(val('sensor.kotel_temperatura_podachi')) ? `${num(val('sensor.kotel_temperatura_podachi'), 1)}° • ${num(val('sensor.kotel_tysk'), 1)} бар` : '—' },
     { icon: 'mdi:battery-alert-variant-outline', color: lowBat ? '#ff453a' : '#30d158', name: 'Батарейки', val: lowBat ? `Розряджено: ${lowBat}` : 'Все добре',
-      act: () => list('Батарейки', () => all().filter((s) => s.attributes?.device_class === 'battery' && !s.entity_id.includes('sm_s928b')).sort((a, b) => Number(a.state) - Number(b.state)).map((s) => s.entity_id)) },
+      act: () => list('Батарейки', () => all().filter((s) => s.attributes?.device_class === 'battery' && !s.entity_id.includes('sm_s928b')).sort((a, b) => (Number(a.state) || 0) - (Number(b.state) || 0)).map((s) => s.entity_id), 'Пристроїв з батарейками немає', true) },
   ]);
 </script>
 
