@@ -52,7 +52,27 @@ export function buildDevices(ha) {
       registry: ents,
     });
   }
-  return out;
+  return mergeOrphans(out, ha);
+}
+
+/** Сутності без пристрою (шаблони, хелпери) приєднуємо до пристрою з тим самим префіксом id:
+ *  sensor.lichylnyk_potuzhnist → пристрій, де є sensor.lichylnyk_potuzhnist_l1 тощо. */
+function mergeOrphans(list, ha) {
+  const real = list.filter((d) => d.device);
+  const token = (eid) => eid.split('.')[1].split('_')[0];
+  const keep = [];
+  for (const d of list) {
+    if (d.device || d.entities.length !== 1) { keep.push(d); continue; }
+    const t = token(d.main);
+    const host = t.length >= 4 && real.find((r) => r.entities.filter((e) => token(e) === t).length >= 2);
+    if (!host) { keep.push(d); continue; }
+    host.entities.push(d.main);
+    host.registry.push(...d.registry);
+    const all = host.registry;
+    all.sort((a, b) => entityScore(a, ha.states[a.entity_id]) - entityScore(b, ha.states[b.entity_id]));
+    host.main = all[0].entity_id;
+  }
+  return keep;
 }
 
 /** Пристрій для довільної сутності (для «Вибраного» з окремих сутностей). */
