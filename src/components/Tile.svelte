@@ -67,7 +67,7 @@
   .pw.on { background: var(--accent-soft); color: var(--accent); }
   .pw.busy { opacity: .5; }
   .name {
-    font-size: 15px; font-weight: 600; line-height: 1.22; margin-top: 10px; word-break: break-word;
+    font-size: 15px; font-weight: 600; line-height: 1.22; margin-top: 10px; overflow-wrap: break-word; hyphens: auto;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .state { font-size: 13px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
