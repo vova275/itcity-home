@@ -26,7 +26,8 @@ export function num(v, digits) {
   const n = Number(v);
   if (!isFinite(n)) return v;
   const d = digits ?? (Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : 2);
-  return n.toLocaleString('uk-UA', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+  const r = Math.round(n * 10 ** d) / 10 ** d || 0;   // без «-0»
+  return r.toLocaleString('uk-UA', { maximumFractionDigits: d, minimumFractionDigits: 0 });
 }
 
 export function stateText(st) {

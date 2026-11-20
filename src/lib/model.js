@@ -61,7 +61,8 @@ export function buildDevices(ha) {
 const STANDALONE = new Set(['climate', 'light', 'switch', 'fan', 'cover', 'alarm_control_panel', 'media_player', 'lock', 'camera', 'binary_sensor', 'water_heater', 'vacuum']);
 
 function mergeOrphans(list, ha) {
-  const real = list.filter((d) => d.device);
+  // Ajax-пристрої не приймають чужих сутностей (їхні id збігаються з назвами кімнат)
+  const real = list.filter((d) => d.device && !(d.device.manufacturer || '').toLowerCase().includes('ajax'));
   const token = (eid) => eid.split('.')[1].split('_')[0];
   const keep = [];
   for (const d of list) {
@@ -81,7 +82,8 @@ function mergeOrphans(list, ha) {
 /** Пристрій для довільної сутності (для «Вибраного» з окремих сутностей). */
 export function deviceForEntity(devices, entityId) {
   const d = devices.find((x) => x.entities.includes(entityId));
-  if (d) return { ...d, main: entityId };   // плитка показує саме вибрану сутність
+  // плитка показує саме вибрану сутність; якщо вона «приєднана» (без власного пристрою) — і її назву
+  if (d) return { ...d, main: entityId, name: d.registry.find((r) => r.entity_id === entityId)?.device_id ? d.name : '' };
   return {
     id: 'entity:' + entityId, device: null, name: '', area_id: null, main: entityId, entities: [entityId], registry: [],
   };

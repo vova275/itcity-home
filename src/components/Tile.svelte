@@ -34,7 +34,7 @@
 
 <button class="tile" class:on class:unavailable onclick={() => openDevice(device)}>
   <div class="top">
-    <span class="ico" class:on><Icon name={icon || (show ? iconFor(shown) : iconFor(st, reg))} size={30} /></span>
+    <span class="ico" class:on><Icon name={icon || (show ? iconFor(shown) : iconFor(st, reg))} size={28} /></span>
     {#if canToggle}
       <span class="pw" class:on class:busy role="button" tabindex="0" aria-label="Увімкнути/вимкнути"
             onclick={toggle} onkeydown={(e) => e.key === 'Enter' && toggle(e)}>
@@ -49,17 +49,19 @@
 <style>
   .tile {
     all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column;
-    background: var(--tile); border-radius: var(--r-tile); padding: 14px 14px 13px; min-height: 136px; min-width: 0;
+    background: var(--tile); border-radius: var(--r-tile); padding: 14px 14px 13px; min-height: 136px; min-width: 0; width: 100%;
     transition: background .2s, transform .1s; position: relative; overflow: hidden;
   }
   .tile:active { transform: scale(.97); }
   .tile.on { background: var(--tile-on); }
-  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; flex: 1; min-height: 44px; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; flex: 1; min-height: 40px; min-width: 0; }
+  .ico { flex: none; }
+  @media (max-width: 480px) { .tile { padding: 12px; min-height: 128px; } .pw { width: 34px; height: 34px; } .name { font-size: 14px; } }
   @media (min-width: 600px) { .tile { aspect-ratio: 1 / 1; } }
   .ico { color: var(--text); opacity: .9; }
   .ico.on { color: var(--accent-warm); opacity: 1; }
   .pw {
-    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; margin: -4px -4px 0 0;
     background: var(--pw); color: var(--text); transition: background .2s;
   }
   .pw.on { background: var(--accent-soft); color: var(--accent); }

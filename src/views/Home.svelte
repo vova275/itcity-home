@@ -4,6 +4,7 @@
   import CameraCard from '../components/CameraCard.svelte';
   import Favorites from '../components/Favorites.svelte';
   import Scenes from '../components/Scenes.svelte';
+  import WeatherCard from '../components/WeatherCard.svelte';
   import { ha } from '../lib/ha.svelte.js';
   import { greeting, WEATHER_UK, num } from '../lib/format.js';
 
@@ -13,13 +14,13 @@
 </script>
 
 <header class="hero">
-  <div>
-    <h1>{greeting()}</h1>
-    {#if weather}<p>{num(weather.attributes.temperature, 0)}°C • {WEATHER_UK[weather.state] || weather.state}</p>{/if}
-  </div>
+  <h1>{greeting()}</h1>
 </header>
 
-<Summary />
+<div class="top">
+  <WeatherCard />
+  <Summary />
+</div>
 
 <div class="duo">
   {#if hasOutage}
@@ -38,7 +39,9 @@
   h1 { font-size: 34px; margin: 0; font-weight: 800; letter-spacing: -.02em; }
   .hero p { margin: 4px 0 0; color: var(--muted); font-size: 18px; }
   h2 { font-size: 24px; margin: 26px 2px 12px; font-weight: 800; }
-  .duo { display: grid; gap: 0 var(--gap); }
-  @media (min-width: 900px) { .duo { grid-template-columns: 1fr 1fr; } }
+  .top { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); }
+  @media (min-width: 900px) { .top { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+  .duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 var(--gap); }
+  @media (min-width: 900px) { .duo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .cams { display: grid; gap: var(--gap); }
 </style>
