@@ -134,7 +134,8 @@ export function createClimate({ dataDir, haWsUrl, token, log = console.log }) {
 
   function everyoneAway() {
     if (!cfg.presence?.length) return false;
-    return cfg.presence.every((e) => states[e] && !['home', 'on'].includes(states[e].state));
+    const known = cfg.presence.filter((e) => states[e] && !['unknown', 'unavailable'].includes(states[e].state));
+    return known.length > 0 && known.every((e) => !['home', 'on'].includes(states[e].state));
   }
 
   function windowOpen(z, temp) {
@@ -155,9 +156,9 @@ export function createClimate({ dataDir, haWsUrl, token, log = console.log }) {
       rt.lastTemps = rt.lastTemps.filter(([t]) => Date.now() - t < 15 * 60e3);
     }
     let preset = schedulePreset(z);
-    if (everyoneAway()) preset = 'away';
-    let target = z.presets[preset];
     let reason = `${PRESET_UK[preset]} за розкладом`;
+    if (everyoneAway()) { preset = 'away'; reason = 'нікого вдома'; }
+    let target = z.presets[preset];
     if (z.manual && (!z.manual.until || z.manual.until > Date.now())) { target = z.manual.target; reason = 'вручну'; }
     if (z.boost && z.boost.until > Date.now()) { target = Number(target) + Number(z.boost.delta || 2); reason = 'буст'; }
 
