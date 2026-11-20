@@ -4,6 +4,7 @@
   import { ha, settings, saveSettings } from '../lib/ha.svelte.js';
   import { friendly } from '../lib/model.js';
   import { iconFor } from '../lib/icons.js';
+  import { setView } from '../lib/ui.svelte.js';
 
   function move(i, d) {
     const f = [...settings.favorites];
@@ -16,6 +17,8 @@
 </script>
 
 <h1>Ще</h1>
+
+<button class="link" onclick={() => setView('automations')}><Icon name="mdi:robot-outline" />Сценарії та автоматизації<Icon name="mdi:chevron-right" /></button>
 
 <h2>Вибрані пристрої</h2>
 <div class="list">
@@ -47,6 +50,8 @@
   h1 { font-size: 34px; font-weight: 800; margin: 6px 2px 16px; }
   h2 { font-size: 20px; font-weight: 800; margin: 22px 2px 10px; }
   .muted { color: var(--muted); }
+  .link { all: unset; cursor: pointer; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: var(--tile); font-size: 16px; }
+  .link :global(svg:last-child) { margin-left: auto; color: var(--muted); }
   .list { display: flex; flex-direction: column; gap: 6px; }
   .item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--tile); border-radius: 16px; }
   .n { flex: 1; }

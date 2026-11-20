@@ -8,6 +8,7 @@
   import Energy from './views/Energy.svelte';
   import More from './views/More.svelte';
   import Climate from './views/Climate.svelte';
+  import Automations from './views/Automations.svelte';
   import { ha, settings, connect, loadSettings, saveSettings } from './lib/ha.svelte.js';
   import { ui, setView } from './lib/ui.svelte.js';
 
@@ -48,6 +49,7 @@
     {:else if ui.view === 'home'}<Home />
     {:else if ui.view === 'rooms'}<Rooms />
     {:else if ui.view === 'climate'}<Climate />
+    {:else if ui.view === 'automations'}<Automations />
     {:else if ui.view === 'energy'}<Energy />
     {:else}<More />{/if}
   </main>
