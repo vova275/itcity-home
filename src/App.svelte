@@ -7,10 +7,11 @@
   import Rooms from './views/Rooms.svelte';
   import Energy from './views/Energy.svelte';
   import More from './views/More.svelte';
+  import Climate from './views/Climate.svelte';
   import { ha, settings, connect, loadSettings, saveSettings } from './lib/ha.svelte.js';
   import { ui, setView } from './lib/ui.svelte.js';
 
-  const NAV = [['home', 'mdi:home-variant', 'Дім'], ['rooms', 'mdi:view-grid', 'Кімнати'], ['energy', 'mdi:lightning-bolt', 'Енергія'], ['more', 'mdi:dots-horizontal', 'Ще']];
+  const NAV = [['home', 'mdi:home-variant', 'Дім'], ['rooms', 'mdi:view-grid', 'Кімнати'], ['climate', 'mdi:thermostat', 'Клімат'], ['energy', 'mdi:lightning-bolt', 'Енергія'], ['more', 'mdi:dots-horizontal', 'Ще']];
 
   // Стартове «Вибране» — як було в Homey, якщо користувач ще нічого не налаштував
   const DEFAULT_FAVS = [
@@ -46,6 +47,7 @@
       <div class="loading"><Icon name="mdi:home-heart" size={56} color="var(--accent)" /><p>Підключаюсь до Home Assistant…</p></div>
     {:else if ui.view === 'home'}<Home />
     {:else if ui.view === 'rooms'}<Rooms />
+    {:else if ui.view === 'climate'}<Climate />
     {:else if ui.view === 'energy'}<Energy />
     {:else}<More />{/if}
   </main>
@@ -65,7 +67,7 @@
   main { flex: 1; padding: calc(16px + env(safe-area-inset-top)) 16px 96px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
   .side { display: none; }
   .bottom {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr);
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: grid; grid-template-columns: repeat(5, 1fr);
     background: var(--nav); backdrop-filter: blur(20px); padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
   }
   .bottom button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 16px; color: var(--muted); font-size: 12px; }

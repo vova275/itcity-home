@@ -57,12 +57,15 @@ export function buildDevices(ha) {
 
 /** Сутності без пристрою (шаблони, хелпери) приєднуємо до пристрою з тим самим префіксом id:
  *  sensor.lichylnyk_potuzhnist → пристрій, де є sensor.lichylnyk_potuzhnist_l1 тощо. */
+// Самостійні «пристрої» — їх ніколи не приєднуємо до чужих пристроїв
+const STANDALONE = new Set(['climate', 'light', 'switch', 'fan', 'cover', 'alarm_control_panel', 'media_player', 'lock', 'camera', 'binary_sensor', 'water_heater', 'vacuum']);
+
 function mergeOrphans(list, ha) {
   const real = list.filter((d) => d.device);
   const token = (eid) => eid.split('.')[1].split('_')[0];
   const keep = [];
   for (const d of list) {
-    if (d.device || d.entities.length !== 1) { keep.push(d); continue; }
+    if (d.device || d.entities.length !== 1 || STANDALONE.has(domainOf(d.main))) { keep.push(d); continue; }
     const t = token(d.main);
     const host = t.length >= 4 && real.find((r) => r.entities.filter((e) => token(e) === t).length >= 2);
     if (!host) { keep.push(d); continue; }
@@ -77,7 +80,9 @@ function mergeOrphans(list, ha) {
 
 /** Пристрій для довільної сутності (для «Вибраного» з окремих сутностей). */
 export function deviceForEntity(devices, entityId) {
-  return devices.find((d) => d.entities.includes(entityId)) || {
+  const d = devices.find((x) => x.entities.includes(entityId));
+  if (d) return { ...d, main: entityId };   // плитка показує саме вибрану сутність
+  return {
     id: 'entity:' + entityId, device: null, name: '', area_id: null, main: entityId, entities: [entityId], registry: [],
   };
 }

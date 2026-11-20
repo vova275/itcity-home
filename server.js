@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
+import { createClimate } from './climate.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8099);
@@ -27,6 +28,7 @@ const upstreamWs = HA_URL.endsWith('/core')
 
 if (!HA_TOKEN) console.warn('[itcity-home] HA_TOKEN/SUPERVISOR_TOKEN не задано — підключення до HA не вдасться');
 fs.mkdirSync(DATA_DIR, { recursive: true });
+const climate = createClimate({ dataDir: DATA_DIR, haWsUrl: upstreamWs, token: HA_TOKEN });
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -46,6 +48,19 @@ function sendJson(res, code, obj) {
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = decodeURIComponent(url.pathname);
+
+  const ci = p.indexOf('/api/climate');
+  if (ci >= 0) {
+    const sub = p.slice(ci + '/api/climate'.length).replace(/^\//, '');
+    if (req.method === 'GET') return sendJson(res, 200, climate.api('GET', sub));
+    let body = '';
+    req.on('data', (c) => { body += c; if (body.length > 1e6) req.destroy(); });
+    req.on('end', () => {
+      try { sendJson(res, 200, climate.api(req.method, sub, body ? JSON.parse(body) : {})); }
+      catch (e) { sendJson(res, 400, { error: String(e) }); }
+    });
+    return;
+  }
 
   if (p.endsWith('/api/config')) {
     if (req.method === 'GET') return sendJson(res, 200, readConfig());
