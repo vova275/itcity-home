@@ -52,14 +52,21 @@
 
 <div class="label">Режим</div>
 <div class="seg">
-  {#each [['Комфорт', 'mdi:sofa', 'Тепло: погода + кімнати'], ['Еко', 'mdi:leaf', 'На 4° прохолодніше'], ['Ручний', 'mdi:hand-back-right', 'Фіксована подача'], ['Вимкнено', 'mdi:power', 'Лише гаряча вода']] as [m, icon, hint]}
+  {#each [['Комфорт', 'mdi:sofa', 'Тепло: погода + кімнати'], ['Еко', 'mdi:leaf', 'На 4° прохолодніше'], ['Ручний', 'mdi:hand-back-right', 'Фіксована подача'], ['Літо', 'mdi:white-balance-sunny', 'Лише тепла підлога'], ['Вимкнено', 'mdi:power', 'Лише гаряча вода']] as [m, icon, hint]}
     <button class:sel={mode === m} onclick={() => callService('input_select', 'select_option', { option: m }, { entity_id: 'input_select.kotel_rezhym' })}>
       <Icon name={icon} size={22} /><b>{m}</b><small>{hint}</small>
     </button>
   {/each}
 </div>
 
-{#if mode === 'Ручний'}
+{#if mode === 'Літо'}
+  <div class="setp">
+    <span><Icon name="mdi:heating-coil" size={22} />Подача (підлога)</span>
+    <button onclick={() => setNum('input_number.kotel_podacha_lito', -1)}><Icon name="mdi:minus" /></button>
+    <b>{num(v('input_number.kotel_podacha_lito'), 0)}°</b>
+    <button onclick={() => setNum('input_number.kotel_podacha_lito', 1)}><Icon name="mdi:plus" /></button>
+  </div>
+{:else if mode === 'Ручний'}
   <div class="setp">
     <span><Icon name="mdi:radiator" size={22} />Подача</span>
     <button onclick={() => setNum('input_number.kotel_podacha_ruchna', -1)}><Icon name="mdi:minus" /></button>

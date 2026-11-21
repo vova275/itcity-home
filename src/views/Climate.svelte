@@ -26,7 +26,9 @@
   const outdoor = $derived(S('weather.golovna')?.attributes?.temperature);
   const flame = $derived(Object.values(ha.states).find((s) => /ebusd_bai_flame$/.test(s.entity_id))?.state === 'on');
   const boilerEnt = $derived(['sensor.kotel_temperatura_podachi', 'sensor.heating_ebusd_bai_status01_temp'].find((e) => S(e)));
-  const MODES = ['Комфорт', 'Еко', 'Ручний', 'Вимкнено'];
+  const MODES = ['Комфорт', 'Еко', 'Ручний', 'Літо', 'Вимкнено'];
+  // який клапан гребінки перекриває кімнату (задано в packages/climate.yaml, heater термостата)
+  const VALVE = { 'climate.spalnia': 'switch.opalennia_kanal_1', 'climate.gostova': 'switch.opalennia_kanal_2' };
   const NO_VALVE = ['climate.dytiacha']; // батарея завжди відкрита, термостат лише просить тепла в котла
 
   function nudge(s, d) {
@@ -81,9 +83,15 @@
           {s.state === 'off' ? 'вимкнено' : heating(s) ? 'гріє (клапан відкритий)' : 'тепло, клапан закритий'}
         {/if}
       </div>
+      <div class="valve">
+        <Icon name="mdi:pipe-valve" size={15} />
+        {#if VALVE[s.entity_id]}Клапан: Sonoff 4CH {VALVE[s.entity_id].replace(/.*kanal_/, 'канал ')} · {S(VALVE[s.entity_id])?.state === 'on' ? 'відкритий' : 'закритий'}
+        {:else}Без клапана (регулюється вручну на батареї){/if}
+      </div>
     </div>
   {/each}
 </div>
+{#if mode === 'Літо'}<p class="note"><Icon name="mdi:white-balance-sunny" size={18} /> Літо: батареї з клапанами перекриті, котел гріє лише теплу підлогу ({num(flowSet?.state, 0)}°). Батарею в Дитячій (без клапана) закрий вручну.</p>{/if}
 
 {#if floor1.length}
   <h2>1 поверх <small>тепла підлога · змішувач на гребінці</small></h2>
@@ -111,8 +119,8 @@
   .boiler.on { background: linear-gradient(160deg, #4a2a12, var(--tile) 75%); }
   .bi { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,107,53,.18); color: #ff6b35; flex: none; }
   .bt { flex: 1; display: flex; flex-direction: column; min-width: 0; } .bt b { font-size: 17px; } .bt small { color: var(--muted); font-size: 13px; }
-  .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-  .seg button { all: unset; cursor: pointer; text-align: center; padding: 12px 4px; border-radius: 14px; background: var(--tile); font-size: 14px; }
+  .seg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .seg button { all: unset; cursor: pointer; text-align: center; padding: 12px 2px; border-radius: 14px; background: var(--tile); font-size: 13px; }
   .seg button.sel { background: var(--accent); color: #fff; }
   .zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--gap); }
   .zone { background: var(--tile); border-radius: var(--r-tile); padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -123,6 +131,8 @@
   .temp { font-size: 56px; font-weight: 300; line-height: 1; text-align: center; margin: 6px 0; } .temp span { font-size: 28px; vertical-align: top; }
   .tgt { display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 16px; } .tgt b { font-size: 22px; }
   .why { display: flex; align-items: center; gap: 6px; justify-content: center; color: var(--muted); font-size: 13px; text-align: center; }
+  .valve { display: flex; align-items: center; gap: 6px; justify-content: center; color: var(--muted); font-size: 12px; opacity: .85; }
+  .note { display: flex; gap: 8px; align-items: flex-start; margin: 12px 2px 0; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, #ffd60a 12%, var(--tile)); font-size: 14px; }
   .mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--gap); }
   .mini button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 18px; background: var(--tile); }
   .mini b { font-size: 20px; } .mini span { color: var(--muted); }
