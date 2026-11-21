@@ -14,9 +14,20 @@
   const playing = $derived(s?.state === 'playing');
   const art = $derived(a.entity_picture ? a.entity_picture : null);
 
+  // LG webOS: окремої сутності remote немає — кнопки через сервіс webostv.button
+  const lg = $derived(players.find((e) => ha.entities.find((x) => x.entity_id === e)?.platform === 'webostv'));
+  const LG_KEYS = { DPAD_UP: 'UP', DPAD_DOWN: 'DOWN', DPAD_LEFT: 'LEFT', DPAD_RIGHT: 'RIGHT', DPAD_CENTER: 'ENTER', BACK: 'BACK', HOME: 'HOME',
+    VOLUME_DOWN: 'VOLUMEDOWN', VOLUME_UP: 'VOLUMEUP', CHANNEL_UP: 'CHANNELUP', CHANNEL_DOWN: 'CHANNELDOWN', MUTE: 'MUTE', MENU: 'MENU' };
+  const hasPad = $derived(!!remote || !!lg);
   const mpc = (service, data = {}) => callService('media_player', service, data, { entity_id: mp });
-  const key = (command) => callService('remote', 'send_command', { command }, { entity_id: remote });
-  const app = (activity) => callService('remote', 'turn_on', { activity }, { entity_id: remote });
+  const key = (command) => remote
+    ? callService('remote', 'send_command', { command }, { entity_id: remote })
+    : callService('webostv', 'button', { entity_id: lg, button: LG_KEYS[command] || command });
+  const app = (activity) => remote
+    ? callService('remote', 'turn_on', { activity }, { entity_id: remote })
+    : callService('media_player', 'select_source', { source: 'YouTube' }, { entity_id: lg });
+  const power = () => remote ? callService('remote', 'toggle', {}, { entity_id: remote })
+    : callService('media_player', ha.states[lg]?.state === 'off' ? 'turn_on' : 'turn_off', {}, { entity_id: lg });
   let vol = $state(null);
   $effect(() => { if (a.volume_level != null) vol = Math.round(a.volume_level * 100); });
 </script>
@@ -53,11 +64,11 @@
   {/if}
 {/if}
 
-{#if remote}
+{#if hasPad}
   <div class="label">Пульт</div>
   <div class="apps">
     <button onclick={() => app('https://www.youtube.com')}><Icon name="mdi:youtube" size={22} color="#ff0033" />YouTube</button>
-    <button onclick={() => callService('remote', 'toggle', {}, { entity_id: remote })}><Icon name="mdi:power" size={22} />Живлення</button>
+    <button onclick={power}><Icon name="mdi:power" size={22} />Живлення</button>
   </div>
   <div class="pad">
     <span></span><button onclick={() => key('DPAD_UP')}><Icon name="mdi:chevron-up" size={30} /></button><span></span>
@@ -71,6 +82,18 @@
     <button onclick={() => key('HOME')}><Icon name="mdi:home" size={22} />Додому</button>
     <button onclick={() => key('VOLUME_DOWN')}><Icon name="mdi:volume-minus" size={22} /></button>
   </div>
+  {#if lg}
+    <div class="row3">
+      <button onclick={() => key('CHANNEL_DOWN')}><Icon name="mdi:chevron-double-down" size={22} />Канал</button>
+      <button onclick={() => key('CHANNEL_UP')}><Icon name="mdi:chevron-double-up" size={22} />Канал</button>
+      <button onclick={() => key('VOLUME_UP')}><Icon name="mdi:volume-plus" size={22} /></button>
+    </div>
+    <div class="row3">
+      <button onclick={() => key('MUTE')}><Icon name="mdi:volume-off" size={22} />Тиша</button>
+      <button onclick={() => key('MENU')}><Icon name="mdi:cog" size={22} />Меню</button>
+      <button onclick={() => mpc('select_source', { source: 'HDMI1' })}><Icon name="mdi:video-input-hdmi" size={22} />HDMI1</button>
+    </div>
+  {/if}
 {/if}
 
 <style>
