@@ -8,7 +8,11 @@
 
   const S = (e) => ha.states[e];
   const val = (e) => Number(S(e)?.state);
-  const lightsOn = $derived(Object.values(ha.states).filter((s) => s.entity_id.startsWith('light.') && s.state === 'on').length);
+  // справжнє світло: без прихованих, службових і членів груп (щоб не рахувати двічі)
+  const regOf = $derived(Object.fromEntries(ha.entities.map((e) => [e.entity_id, e])));
+  const inGroup = $derived(new Set(Object.values(ha.states).filter((s) => s.entity_id.startsWith('light.') && Array.isArray(s.attributes.entity_id)).flatMap((s) => s.attributes.entity_id)));
+  const isLight = (s) => s.entity_id.startsWith('light.') && !regOf[s.entity_id]?.hidden_by && !regOf[s.entity_id]?.entity_category && !inGroup.has(s.entity_id);
+  const lightsOn = $derived(Object.values(ha.states).filter((s) => isLight(s) && s.state === 'on').length);
   const alarm = $derived(S('alarm_control_panel.okhorona')?.state);
   const ALARM = { disarmed: 'Знято', armed_away: 'Під охороною', armed_night: 'Нічний', armed_home: 'Частково', triggered: 'ТРИВОГА' };
   const temps = $derived(['spalnia', 'gostova', 'dytiacha', 'zal'].map((r) => val(`sensor.${r}_temperatura`)).filter(isFinite));
@@ -22,7 +26,7 @@
   const all = () => Object.values(ha.states);
   const items = $derived([
     { icon: 'mdi:lightbulb-group', color: '#ffd60a', name: 'Освітлення', val: `Увімкнено: ${lightsOn}`,
-      act: () => list('Освітлення', () => all().filter((s) => s.entity_id.startsWith('light.')).map((s) => s.entity_id)) },
+      act: () => list('Освітлення', () => all().filter(isLight).map((s) => s.entity_id)) },
     { icon: 'mdi:shield-home', color: alarm === 'disarmed' ? '#8e8e93' : '#30d158', name: 'Охорона', val: ALARM[alarm] || '—', act: () => open('alarm_control_panel.okhorona') },
     { icon: 'mdi:leaf', color: '#30d158', name: 'Енергія', val: isFinite(val('sensor.lichylnyk_potuzhnist')) ? `${num(val('sensor.lichylnyk_potuzhnist') / 1000, 2)} kW` : '—', act: () => setView('energy') },
     { icon: 'mdi:thermometer', color: '#ff9f0a', name: 'Клімат', val: temps.length ? `${num(avg(temps), 1)}° | ${Math.round(avg(hums))}%` : '—',
