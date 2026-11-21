@@ -4,9 +4,14 @@ export const clim = $state({ config: null, status: null, error: '' });
 export async function loadClimate() {
   try {
     const r = await fetch('api/climate');
+    // 401/502 від Ingress (сесія застаріла після оновлення аддона) — не JSON
+    if (!r.ok) throw new Error(r.status === 401 ? 'session' : 'http ' + r.status);
     const d = await r.json();
     clim.config = d.config; clim.status = d.status; clim.error = '';
-  } catch (e) { clim.error = String(e); }
+  } catch (e) {
+    clim.error = String(e).includes('session') ? 'Сесія застаріла після оновлення — перевідкрий «Дім».' : 'Немає зв’язку з сервером «Дому», повторюю…';
+    setTimeout(loadClimate, 5000);
+  }
 }
 
 export async function saveClimate() {

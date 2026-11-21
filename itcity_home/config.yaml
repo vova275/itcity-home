@@ -1,5 +1,5 @@
 name: ITCITY Home
-version: "0.6.1"
+version: "0.6.2"
 slug: itcity_home
 description: Зручний дашборд у стилі Homey — кімнати, плитки, картки пристроїв з графіками, графік відключень світла.
 url: https://github.com/vova275/itcity-home
