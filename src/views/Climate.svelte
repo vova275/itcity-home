@@ -26,7 +26,7 @@
   const outdoor = $derived(S('weather.golovna')?.attributes?.temperature);
   const flame = $derived(Object.values(ha.states).find((s) => /ebusd_bai_flame$/.test(s.entity_id))?.state === 'on');
   const boilerEnt = $derived(['sensor.kotel_temperatura_podachi', 'sensor.heating_ebusd_bai_status01_temp'].find((e) => S(e)));
-  const MODES = ['Комфорт', 'Еко', 'Ручний', 'Літо', 'Вимкнено'];
+  const MODES = ['Комфорт', 'Еко', 'Ручний', 'Літо', 'Відпустка', 'Вимкнено'];
   // який клапан гребінки перекриває кімнату (задано в packages/climate.yaml, heater термостата)
   const VALVE = { 'climate.spalnia': 'switch.opalennia_kanal_1', 'climate.gostova': 'switch.opalennia_kanal_2' };
   const NO_VALVE = ['climate.dytiacha']; // батарея завжди відкрита, термостат лише просить тепла в котла
@@ -91,6 +91,7 @@
     </div>
   {/each}
 </div>
+{#if mode === 'Відпустка'}<p class="note"><Icon name="mdi:airplane" size={18} /> Відпустка: кімнати 2 поверху тримають 12° (від замерзання), котел на мінімумі, гаряча вода 35°. Тепла підлога 1 поверху — як виставлено на гребінці.</p>{/if}
 {#if mode === 'Літо'}<p class="note"><Icon name="mdi:white-balance-sunny" size={18} /> Літо: батареї з клапанами перекриті, котел гріє лише теплу підлогу ({num(flowSet?.state, 0)}°). Батарею в Дитячій (без клапана) закрий вручну.</p>{/if}
 
 {#if floor1.length}
@@ -119,7 +120,7 @@
   .boiler.on { background: linear-gradient(160deg, #4a2a12, var(--tile) 75%); }
   .bi { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,107,53,.18); color: #ff6b35; flex: none; }
   .bt { flex: 1; display: flex; flex-direction: column; min-width: 0; } .bt b { font-size: 17px; } .bt small { color: var(--muted); font-size: 13px; }
-  .seg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
   .seg button { all: unset; cursor: pointer; text-align: center; padding: 12px 2px; border-radius: 14px; background: var(--tile); font-size: 13px; }
   .seg button.sel { background: var(--accent); color: #fff; }
   .zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--gap); }

@@ -52,7 +52,7 @@
 
 <div class="label">Режим</div>
 <div class="seg">
-  {#each [['Комфорт', 'mdi:sofa', 'Тепло: погода + кімнати'], ['Еко', 'mdi:leaf', 'На 4° прохолодніше'], ['Ручний', 'mdi:hand-back-right', 'Фіксована подача'], ['Літо', 'mdi:white-balance-sunny', 'Лише тепла підлога'], ['Вимкнено', 'mdi:power', 'Лише гаряча вода']] as [m, icon, hint]}
+  {#each [['Комфорт', 'mdi:sofa', 'Тепло: погода + кімнати'], ['Еко', 'mdi:leaf', 'На 4° прохолодніше'], ['Ручний', 'mdi:hand-back-right', 'Фіксована подача'], ['Літо', 'mdi:white-balance-sunny', 'Лише тепла підлога'], ['Відпустка', 'mdi:airplane', 'Від замерзання, 12°'], ['Вимкнено', 'mdi:power', 'Лише гаряча вода']] as [m, icon, hint]}
     <button class:sel={mode === m} onclick={() => callService('input_select', 'select_option', { option: m }, { entity_id: 'input_select.kotel_rezhym' })}>
       <Icon name={icon} size={22} /><b>{m}</b><small>{hint}</small>
     </button>
