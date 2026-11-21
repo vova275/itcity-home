@@ -52,7 +52,24 @@ export function buildDevices(ha) {
       registry: ents,
     });
   }
-  return mergeOrphans(out, ha);
+  return mergeTwins(mergeOrphans(out, ha), ha);
+}
+
+/** Один фізичний пристрій, який бачать кілька інтеграцій (Cast + Android TV Remote): однакова назва і кімната → один. */
+function mergeTwins(list, ha) {
+  const out = [];
+  const byKey = new Map();
+  for (const d of list) {
+    if (!d.device || !d.area_id) { out.push(d); continue; }
+    const key = d.area_id + '|' + (d.name || '').trim().toLowerCase();
+    const host = byKey.get(key);
+    if (!host) { byKey.set(key, d); out.push(d); continue; }
+    host.entities.push(...d.entities);
+    host.registry.push(...d.registry);
+    host.registry.sort((a, b) => entityScore(a, ha.states[a.entity_id]) - entityScore(b, ha.states[b.entity_id]));
+    host.main = host.registry[0].entity_id;
+  }
+  return out;
 }
 
 /** Сутності без пристрою (шаблони, хелпери) приєднуємо до пристрою з тим самим префіксом id:
