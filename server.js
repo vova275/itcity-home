@@ -49,6 +49,18 @@ function haPost(pathname, body) {
     r.end(JSON.stringify(body));
   });
 }
+async function snapIfOld(entity) {
+  const name = entity.split('.')[1];
+  const f = frames[entity] || (frames[entity] = { t: 0, busy: null });
+  if (Date.now() - f.t > 25000) {
+    if (!f.busy) f.busy = haPost('services/shell_command/cam_snap', { file: `/config/www/cam/${name}.jpg` }).finally(() => { f.t = Date.now(); f.busy = null; });
+    await f.busy;
+  }
+  return { url: `/local/cam/${name}.jpg?t=${f.t}`, t: f.t };
+}
+async function cameraRefresh(entity, res) {
+  sendJson(res, 200, await snapIfOld(entity));
+}
 async function cameraFrame(entity, res) {
   const name = entity.split('.')[1];
   const f = frames[entity] || (frames[entity] = { t: 0, busy: null });
@@ -75,6 +87,8 @@ const server = http.createServer((req, res) => {
   // Камери: знімок і живе MJPEG-відео через сервер (токен HA лишається на сервері)
   const cs = p.match(/\/api\/camera\/frame\/(camera\.[\w-]+)$/);
   if (cs) return cameraFrame(cs[1], res);
+  const cr = p.match(/\/api\/camera\/refresh\/(camera\.[\w-]+)$/);
+  if (cr) return cameraRefresh(cr[1], res);
   const cm = p.match(/\/api\/camera\/(snap|live)\/(camera\.[\w-]+)$/);
   if (cm) {
     const base = HA_URL.endsWith('/core') ? HA_URL + '/api' : HA_URL + '/api';

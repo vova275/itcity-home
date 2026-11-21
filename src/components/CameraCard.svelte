@@ -33,20 +33,24 @@
   let tick = $state(0);
   let loaded = $state(false);
   $effect(() => { const t = setInterval(() => { if (!document.hidden) tick++; }, 30000); return () => clearInterval(t); });
-  const frame = $derived(`api/camera/frame/${entity}?n=${tick}`);
+  let frame = $state('');
+  $effect(() => {
+    tick;
+    fetch(`api/camera/refresh/${entity}`).then((r) => r.json()).then((d) => { if (d.url) frame = d.url; }).catch(() => {});
+  });
   $effect(() => { if (full && bigVideo) return play(bigVideo); });
 </script>
 
 {#if st}
   <button class="cam" onclick={() => { full = true; pushLayer(() => (full = false)); }}>
-    <img src={frame} alt="" onload={() => (loaded = true)} />
+    {#if frame}<img src={frame} alt="" onload={() => (loaded = true)} />{/if}
     {#if !loaded}<span class="err">Завантаження кадру…</span>{/if}
     <span class="play"><Icon name="mdi:play" size={34} /></span>
     <span class="lbl"><Icon name="mdi:cctv" size={18} />{name || st.attributes.friendly_name?.replace(/^IP CAMERA\s*/, '') || 'Камера'}</span>
   </button>
   {#if full}
     <div class="full" role="dialog" aria-modal="true">
-      <img class="poster" src={frame} alt="" />
+      {#if frame}<img class="poster" src={frame} alt="" />{/if}
       <video bind:this={bigVideo} muted autoplay playsinline controls></video>
       {#if error}<span class="err">{error}</span>{/if}
       <button class="x" onclick={back} aria-label="Закрити"><Icon name="mdi:close" /></button>
