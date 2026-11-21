@@ -71,12 +71,6 @@
     <span><Icon name="mdi:calculator-variant" size={22} />Подача зараз</span>
     <b class="wide">{ok('sensor.kotel_rozrakhunkova_podacha') ? num(v('sensor.kotel_rozrakhunkova_podacha'), 0) + '°' : '—'}</b>
   </div>
-  <div class="setp">
-    <span><Icon name="mdi:sofa" size={22} />1 поверх (зал)</span>
-    <button onclick={() => setNum('input_number.kotel_tsil_1_poverkh', -1)}><Icon name="mdi:minus" /></button>
-    <b>{num(v('input_number.kotel_tsil_1_poverkh'), 1)}°</b>
-    <button onclick={() => setNum('input_number.kotel_tsil_1_poverkh', 1)}><Icon name="mdi:plus" /></button>
-  </div>
 {/if}
 <div class="setp">
   <span><Icon name="mdi:water-thermometer" size={22} />Гаряча вода</span>
