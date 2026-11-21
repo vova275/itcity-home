@@ -52,7 +52,7 @@
 
 <div class="label">Режим</div>
 <div class="seg">
-  {#each [['Ручний', 'mdi:hand-back-right', 'Фіксована подача'], ['Авто', 'mdi:weather-partly-snowy', 'За погодою і кімнатами']] as [m, icon, hint]}
+  {#each [['Комфорт', 'mdi:sofa', 'Тепло: погода + кімнати'], ['Еко', 'mdi:leaf', 'На 4° прохолодніше'], ['Ручний', 'mdi:hand-back-right', 'Фіксована подача'], ['Вимкнено', 'mdi:power', 'Лише гаряча вода']] as [m, icon, hint]}
     <button class:sel={mode === m} onclick={() => callService('input_select', 'select_option', { option: m }, { entity_id: 'input_select.kotel_rezhym' })}>
       <Icon name={icon} size={22} /><b>{m}</b><small>{hint}</small>
     </button>
@@ -66,10 +66,16 @@
     <b>{num(v('input_number.kotel_podacha_ruchna'), 0)}°</b>
     <button onclick={() => setNum('input_number.kotel_podacha_ruchna', 1)}><Icon name="mdi:plus" /></button>
   </div>
-{:else}
+{:else if mode !== 'Вимкнено'}
   <div class="setp">
-    <span><Icon name="mdi:calculator-variant" size={22} />Розрахунок</span>
+    <span><Icon name="mdi:calculator-variant" size={22} />Подача зараз</span>
     <b class="wide">{ok('sensor.kotel_rozrakhunkova_podacha') ? num(v('sensor.kotel_rozrakhunkova_podacha'), 0) + '°' : '—'}</b>
+  </div>
+  <div class="setp">
+    <span><Icon name="mdi:sofa" size={22} />1 поверх (зал)</span>
+    <button onclick={() => setNum('input_number.kotel_tsil_1_poverkh', -1)}><Icon name="mdi:minus" /></button>
+    <b>{num(v('input_number.kotel_tsil_1_poverkh'), 1)}°</b>
+    <button onclick={() => setNum('input_number.kotel_tsil_1_poverkh', 1)}><Icon name="mdi:plus" /></button>
   </div>
 {/if}
 <div class="setp">
@@ -79,12 +85,12 @@
   <button onclick={() => setNum('input_number.kotel_gvp', 1)}><Icon name="mdi:plus" /></button>
 </div>
 
-{#if mode === 'Авто'}
+{#if mode === 'Комфорт' || mode === 'Еко'}
   <button class="fold" onclick={() => (showCurve = !showCurve)}>
     <Icon name={showCurve ? 'mdi:chevron-up' : 'mdi:chevron-down'} /> Погодна крива
   </button>
   {#if showCurve}
-    {#each [['input_number.kotel_kryva_nahyl', 'Нахил'], ['input_number.kotel_kryva_zsuv', 'Зсув'], ['input_number.kotel_podacha_min', 'Мін. подача'], ['input_number.kotel_podacha_max', 'Макс. подача']] as [e, l]}
+    {#each [['input_number.kotel_kryva_nahyl', 'Нахил'], ['input_number.kotel_kryva_zsuv', 'Зсув'], ['input_number.kotel_podacha_min', 'Мін. подача'], ['input_number.kotel_podacha_max', 'Макс. подача'], ['input_number.kotel_lito', 'Літо: вимикати опалення вище']] as [e, l]}
       <div class="setp small">
         <span>{l}</span>
         <button onclick={() => setNum(e, -1)}><Icon name="mdi:minus" /></button>
