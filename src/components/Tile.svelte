@@ -19,6 +19,12 @@
   const dom = $derived(domainOf(device.main));
   const canToggle = $derived(TOGGLE_DOMAINS.has(dom) && st?.state !== 'unavailable');
   const unavailable = $derived(!st || st.state === 'unavailable');
+  // температура + тиск (котел): «48,5 °C • 1,5 bar»
+  const extra = $derived.by(() => {
+    if (show || st?.attributes?.device_class !== 'temperature') return '';
+    const p = (device.entities || []).map((e) => ha.states[e]).find((x) => x?.attributes?.device_class === 'pressure' && x.attributes.unit_of_measurement === 'bar' && isFinite(Number(x.state)));
+    return p ? ' • ' + stateText(p) : '';
+  });
   let busy = $state(false);
 
   async function toggle(e) {
@@ -43,7 +49,7 @@
     {/if}
   </div>
   <div class="name">{name || device.name || st?.attributes?.friendly_name || device.main}</div>
-  <div class="state" class:alert={unavailable || low}>{unavailable && !show ? '⚠ Недоступно' : stateText(shown)}</div>
+  <div class="state" class:alert={unavailable || low}>{unavailable && !show ? '⚠ Недоступно' : stateText(shown) + extra}</div>
 </button>
 
 <style>

@@ -20,6 +20,8 @@ function entityScore(e, st) {
     s += (i < 0 ? 9 : i) / 10;
   }
   if (e.entity_category) s += 50;
+  // без значення (unknown/unavailable) — не показувати на плитці, якщо є жива сутність
+  if (!st || ['unknown', 'unavailable', ''].includes(st.state)) s += 30;
   return s;
 }
 
