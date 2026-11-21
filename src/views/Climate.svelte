@@ -1,101 +1,129 @@
 <script>
-  // Клімат: котел + зони (кімнати). Тап по ⚙ — налаштування зони.
+  // Клімат: реальний стан — котел (керує HA, режими) і термостати кімнат (керують клапанами).
+  // Тап по картці — повна картка пристрою (графіки, параметри, налаштування котла).
   import Icon from '../components/Icon.svelte';
-  import ZoneSettings from '../components/ZoneSettings.svelte';
-  import BoilerSettings from '../components/BoilerSettings.svelte';
-  import { clim, startClimatePolling, zoneAction, saveClimate, PRESET_UK } from '../lib/climate.svelte.js';
-  import { pushLayer, back } from '../lib/ui.svelte.js';
+  import { ha, callService } from '../lib/ha.svelte.js';
+  import { buildDevices, deviceForEntity } from '../lib/model.js';
+  import { openDevice } from '../lib/ui.svelte.js';
   import { num } from '../lib/format.js';
 
-  $effect(() => startClimatePolling());
-  let editing = $state(null);       // id зони або 'boiler'
-  const openEdit = (id) => { editing = id; pushLayer(() => (editing = null)); };
+  const S = (e) => ha.states[e];
+  const devices = $derived(buildDevices(ha));
+  const open = (e) => { const d = deviceForEntity(devices, e); if (d) openDevice(d); };
 
-  function addZone() {
-    const id = 'z' + Date.now().toString(36);
-    clim.config.zones.push({ id, name: 'Нова кімната' });
-    saveClimate().then(() => openEdit(id));
+  const regOf = $derived(Object.fromEntries(ha.entities.map((e) => [e.entity_id, e])));
+  const areaName = (id) => ha.areas.find((a) => a.area_id === id)?.name;
+  // термостати кімнат (не кондиціонер)
+  const rooms = $derived(Object.values(ha.states)
+    .filter((s) => s.entity_id.startsWith('climate.') && !regOf[s.entity_id]?.hidden_by && s.attributes.hvac_modes?.includes('heat') && !s.attributes.hvac_modes?.includes('cool'))
+    .sort((a, b) => (a.attributes.friendly_name || '').localeCompare(b.attributes.friendly_name || '')));
+  const ac = $derived(Object.values(ha.states).filter((s) => s.entity_id.startsWith('climate.') && s.attributes.hvac_modes?.includes('cool')));
+
+  const mode = $derived(S('input_select.kotel_rezhym')?.state);
+  const control = $derived(S('automation.kotel_nadsilati_zadane_kozhni_2_khv')?.state === 'on');
+  const flowNow = $derived(S('sensor.kotel_temperatura_podachi')?.state);
+  const flowSet = $derived(S('sensor.kotel_rozrakhunkova_podacha'));
+  const outdoor = $derived(S('weather.golovna')?.attributes?.temperature);
+  const flame = $derived(Object.values(ha.states).find((s) => /ebusd_bai_flame$/.test(s.entity_id))?.state === 'on');
+  const boilerEnt = $derived(['sensor.kotel_temperatura_podachi', 'sensor.heating_ebusd_bai_status01_temp'].find((e) => S(e)));
+  const MODES = ['Комфорт', 'Еко', 'Ручний', 'Вимкнено'];
+  const NO_VALVE = ['climate.dytiacha']; // батарея завжди відкрита, термостат лише просить тепла в котла
+
+  function nudge(s, d) {
+    const step = s.attributes.target_temp_step || 0.5;
+    callService('climate', 'set_temperature', { temperature: Math.round(((s.attributes.temperature ?? 21) + d * step) * 10) / 10 }, { entity_id: s.entity_id });
   }
-  const st = (id) => clim.status?.zones?.[id] || {};
-  function nudge(z, d) {
-    const cur = st(z.id).target ?? z.presets?.comfort ?? 21;
-    zoneAction(z.id, 'target', { target: Math.round((cur + d) * 2) / 2 });
-  }
+  const heating = (s) => s.attributes.hvac_action === 'heating';
+  const floor1 = $derived([['Зал', 'sensor.zal_temperatura'], ['Кухня', 'sensor.kukhnia_temperatura_fibaro']].filter(([, e]) => S(e) && !isNaN(Number(S(e).state))));
 </script>
 
 <h1>Клімат</h1>
 
-{#if !clim.config}
-  <p class="muted">{clim.error || 'Завантаження…'}</p>
-{:else}
-  {@const b = clim.status?.boiler || {}}
-  <button class="boiler" class:on={b.heating} onclick={() => openEdit('boiler')}>
-    <span class="bi"><Icon name="mdi:water-boiler" size={30} /></span>
-    <span class="bt">
-      <b>Котел {b.heating ? `гріє · подача ${b.flow}°` : b.summer ? '— літній режим' : 'чекає'}</b>
-      <small>
-        Надворі {b.outdoor != null ? num(b.outdoor, 1) + '°' : '—'}
-        {#if b.zones?.length} · просять: {b.zones.join(', ')}{/if}
-        · {!clim.config.boiler.enabled ? 'керування вимкнено' : clim.config.boiler.dry_run ? 'тільки показую' : 'HA керує'}
-      </small>
-    </span>
-    <Icon name="mdi:cog" size={22} />
-  </button>
-
-  <div class="zones">
-    {#each clim.config.zones as z (z.id)}
-      {@const s = st(z.id)}
-      <div class="zone" class:heat={s.heating} class:off={!z.enabled}>
-        <div class="zh">
-          <b>{z.name}</b>
-          {#if z.dry_run}<span class="badge">тест</span>{/if}
-          <button class="ib" onclick={() => openEdit(z.id)} aria-label="Налаштування"><Icon name="mdi:cog" size={20} /></button>
-        </div>
-        <div class="temp">{s.temp != null ? num(s.temp, 1) : '—'}<span>°</span></div>
-        <div class="tgt">
-          <button class="rb" onclick={() => nudge(z, -0.5)}><Icon name="mdi:minus" /></button>
-          <span>до <b>{s.target != null ? num(s.target, 1) : '—'}°</b></span>
-          <button class="rb" onclick={() => nudge(z, 0.5)}><Icon name="mdi:plus" /></button>
-        </div>
-        <div class="why">
-          <Icon name={s.heating ? 'mdi:fire' : s.note?.startsWith('відкрите') ? 'mdi:window-open-variant' : 'mdi:pause-circle-outline'} size={16} />
-          {s.heating ? (z.dry_run ? 'гріла б' : 'гріє') : 'не гріє'} · {s.note || s.reason || PRESET_UK[s.preset] || ''}
-        </div>
-        <div class="acts">
-          <button onclick={() => zoneAction(z.id, 'boost', { minutes: 60, delta: 2 })}><Icon name="mdi:rocket-launch" size={18} />+2° на годину</button>
-          {#if s.reason === 'вручну' || s.reason === 'буст'}
-            <button onclick={() => zoneAction(z.id, 'clear')}><Icon name="mdi:calendar-sync" size={18} />За розкладом</button>
-          {/if}
-        </div>
-      </div>
+<button class="boiler" class:on={flame} onclick={() => boilerEnt && open(boilerEnt)}>
+  <span class="bi"><Icon name="mdi:water-boiler" size={30} /></span>
+  <span class="bt">
+    <b>Котел · {control ? (mode || '—') : 'керує панель котла'}</b>
+    <small>
+      Подача {flowNow != null && !isNaN(Number(flowNow)) ? num(flowNow, 0) + '°' : '—'}
+      {#if control && flowSet && mode !== 'Вимкнено'} (задано {num(flowSet.state, 0)}°){/if}
+      · надворі {outdoor != null ? num(outdoor, 1) + '°' : '—'}{flame ? ' · 🔥 горить' : ''}
+    </small>
+  </span>
+  <Icon name="mdi:chevron-right" size={22} />
+</button>
+{#if control}
+  <div class="seg">
+    {#each MODES as m}
+      <button class:sel={mode === m} onclick={() => callService('input_select', 'select_option', { option: m }, { entity_id: 'input_select.kotel_rezhym' })}>{m}</button>
     {/each}
-    <button class="add" onclick={addZone}><Icon name="mdi:plus" size={28} />Додати кімнату</button>
   </div>
 {/if}
 
-{#if editing === 'boiler'}<BoilerSettings onclose={back} />
-{:else if editing}<ZoneSettings id={editing} onclose={back} />{/if}
+<h2>2 поверх</h2>
+<div class="zones">
+  {#each rooms as s (s.entity_id)}
+    {@const a = s.attributes}
+    <div class="zone" class:heat={heating(s)} class:off={s.state === 'off'}>
+      <button class="zh" onclick={() => open(s.entity_id)}>
+        <b>{a.friendly_name}</b><Icon name="mdi:chevron-right" size={20} />
+      </button>
+      <div class="temp">{a.current_temperature != null ? num(a.current_temperature, 1) : '—'}<span>°</span></div>
+      <div class="tgt">
+        <button class="rb" onclick={() => nudge(s, -1)} aria-label="Менше"><Icon name="mdi:minus" /></button>
+        <span>до <b>{a.temperature != null ? num(a.temperature, 1) : '—'}°</b></span>
+        <button class="rb" onclick={() => nudge(s, 1)} aria-label="Більше"><Icon name="mdi:plus" /></button>
+      </div>
+      <div class="why">
+        <Icon name={heating(s) ? 'mdi:fire' : s.state === 'off' ? 'mdi:power' : 'mdi:check-circle-outline'} size={16} />
+        {#if NO_VALVE.includes(s.entity_id)}
+          {heating(s) ? 'гріє · просить тепла в котла' : 'тепло'} · батарея без клапана
+        {:else}
+          {s.state === 'off' ? 'вимкнено' : heating(s) ? 'гріє (клапан відкритий)' : 'тепло, клапан закритий'}
+        {/if}
+      </div>
+    </div>
+  {/each}
+</div>
+
+{#if floor1.length}
+  <h2>1 поверх <small>тепла підлога · змішувач на гребінці</small></h2>
+  <div class="mini">
+    {#each floor1 as [n, e]}
+      <button onclick={() => open(e)}><span>{n}</span><b>{num(S(e).state, 1)}°</b></button>
+    {/each}
+  </div>
+{/if}
+
+{#if ac.length}
+  <h2>Кондиціонер</h2>
+  <div class="mini">
+    {#each ac as s (s.entity_id)}
+      <button onclick={() => open(s.entity_id)}><span>{s.attributes.friendly_name}</span><b>{s.state === 'off' ? 'Вимк.' : num(s.attributes.temperature, 0) + '°'}</b></button>
+    {/each}
+  </div>
+{/if}
 
 <style>
   h1 { font-size: 34px; font-weight: 800; margin: 6px 2px 16px; }
-  .muted { color: var(--muted); }
+  h2 { font-size: 20px; margin: 22px 2px 10px; } h2 small { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 6px; }
   .boiler { all: unset; cursor: pointer; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 14px; padding: 16px;
     border-radius: var(--r-tile); background: var(--tile); }
   .boiler.on { background: linear-gradient(160deg, #4a2a12, var(--tile) 75%); }
   .bi { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,107,53,.18); color: #ff6b35; flex: none; }
   .bt { flex: 1; display: flex; flex-direction: column; min-width: 0; } .bt b { font-size: 17px; } .bt small { color: var(--muted); font-size: 13px; }
-  .zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--gap); margin-top: var(--gap); }
-  .zone { background: var(--tile); border-radius: var(--r-tile); padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+  .seg button { all: unset; cursor: pointer; text-align: center; padding: 12px 4px; border-radius: 14px; background: var(--tile); font-size: 14px; }
+  .seg button.sel { background: var(--accent); color: #fff; }
+  .zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--gap); }
+  .zone { background: var(--tile); border-radius: var(--r-tile); padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .zone.heat { background: linear-gradient(160deg, #5a2c0e, var(--tile) 70%); }
   .zone.off { opacity: .6; }
-  .zh { display: flex; align-items: center; gap: 8px; } .zh b { font-size: 18px; flex: 1; }
-  .badge { font-size: 11px; padding: 3px 8px; border-radius: 8px; background: rgba(255,214,10,.2); color: #ffd60a; }
-  .ib, .rb { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
+  .zh { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; } .zh b { font-size: 18px; flex: 1; }
+  .rb { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
   .temp { font-size: 56px; font-weight: 300; line-height: 1; text-align: center; margin: 6px 0; } .temp span { font-size: 28px; vertical-align: top; }
   .tgt { display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 16px; } .tgt b { font-size: 22px; }
   .why { display: flex; align-items: center; gap: 6px; justify-content: center; color: var(--muted); font-size: 13px; text-align: center; }
-  .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
-  .acts button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: var(--pw); font-size: 13px; }
-  .add { all: unset; cursor: pointer; border: 2px dashed var(--line); border-radius: var(--r-tile); min-height: 160px; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 8px; color: var(--muted); }
+  .mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--gap); }
+  .mini button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 18px; background: var(--tile); }
+  .mini b { font-size: 20px; } .mini span { color: var(--muted); }
 </style>
