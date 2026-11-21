@@ -40,6 +40,29 @@ function readConfig() {
   try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch { return {}; }
 }
 
+const frames = {}; // entity -> { t, busy: Promise }
+function haPost(pathname, body) {
+  return new Promise((resolve) => {
+    const u = new URL(HA_URL + '/api/' + pathname);
+    const r = http.request(u, { method: 'POST', headers: { Authorization: `Bearer ${HA_TOKEN}`, 'Content-Type': 'application/json' }, timeout: 30000 }, (x) => { x.resume(); x.on('end', () => resolve(x.statusCode)); });
+    r.on('error', () => resolve(0)); r.on('timeout', () => { r.destroy(); resolve(0); });
+    r.end(JSON.stringify(body));
+  });
+}
+async function cameraFrame(entity, res) {
+  const name = entity.split('.')[1];
+  const f = frames[entity] || (frames[entity] = { t: 0, busy: null });
+  if (Date.now() - f.t > 25000) {
+    if (!f.busy) f.busy = haPost('services/shell_command/cam_snap', { file: `/config/www/cam/${name}.jpg` }).finally(() => { f.t = Date.now(); f.busy = null; });
+    await f.busy;
+  }
+  const up = http.get(new URL(HA_URL + `/local/cam/${name}.jpg?t=${f.t}`), (r) => {
+    res.writeHead(r.statusCode || 502, { 'Content-Type': r.headers['content-type'] || 'image/jpeg', 'Cache-Control': 'no-store' });
+    r.pipe(res);
+  });
+  up.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end(); });
+}
+
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(obj));
@@ -50,6 +73,8 @@ const server = http.createServer((req, res) => {
   const p = decodeURIComponent(url.pathname);
 
   // Камери: знімок і живе MJPEG-відео через сервер (токен HA лишається на сервері)
+  const cs = p.match(/\/api\/camera\/frame\/(camera\.[\w-]+)$/);
+  if (cs) return cameraFrame(cs[1], res);
   const cm = p.match(/\/api\/camera\/(snap|live)\/(camera\.[\w-]+)$/);
   if (cm) {
     const base = HA_URL.endsWith('/core') ? HA_URL + '/api' : HA_URL + '/api';

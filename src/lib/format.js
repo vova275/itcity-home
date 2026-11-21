@@ -9,6 +9,23 @@ const STATE_UK = {
   heat: 'Обігрів', cool: 'Охолодження', auto: 'Авто', dry: 'Осушення', fan_only: 'Вентиляція', heat_cool: 'Обігрів/охол.',
   heating: 'гріє', cooling: 'охолоджує', drying: 'осушує', fan: 'вентилює', preheating: 'прогрів',
 };
+// побутова техніка (SmartThings, Home Connect): стан, етап, програми
+const APPLIANCE_UK = {
+  run: 'Працює', stop: 'Зупинено', pause: 'Пауза', ready: 'Готова', inactive: 'Вимкнена', delayedstart: 'Відкладений старт',
+  actionrequired: 'Потрібна дія', finished: 'Завершено', finish: 'Завершено', error: 'Помилка', aborting: 'Скасування',
+  none: '—', wash: 'Прання', ai_wash: 'Прання (AI)', pre_wash: 'Попереднє прання', air_wash: 'Освіження повітрям', rinse: 'Полоскання',
+  ai_rinse: 'Полоскання (AI)', spin: 'Віджим', ai_spin: 'Віджим (AI)', drying: 'Сушіння', ai_drying: 'Сушіння (AI)', cooling: 'Охолодження',
+  delay_wash: 'Відкладений старт', refreshing: 'Освіження', weight_sensing: 'Зважування', wrinkle_prevent: 'Захист від зминання',
+  dehumidifying: 'Осушення', sanitizing: 'Дезінфекція', internal_care: 'Самоочищення',
+  rinse_hold: 'Без зливу', no_spin: 'Без віджиму', cold: 'Холодна',
+  dishcare_dishwasher_program_eco_50: 'Eco 50°', dishcare_dishwasher_program_auto_2: 'Авто 45–65°', dishcare_dishwasher_program_intensiv_70: 'Інтенсив 70°',
+  dishcare_dishwasher_program_quick_65: 'Швидка 65°', dishcare_dishwasher_program_night_wash: 'Нічна (тиха)', dishcare_dishwasher_program_machine_care: 'Догляд за машиною',
+  dishcare_dishwasher_program_pre_rinse: 'Попереднє ополіскування',
+};
+const APPLIANCE_RE = /(machine_state|job_state|operation_state|posudomiika|pralna|susharka|washer|dryer|dishwasher)/;
+export function applianceText(entityId, state) {
+  return APPLIANCE_RE.test(entityId) ? APPLIANCE_UK[state] : undefined;
+}
 export const HVAC_UK = { off: 'Вимк.', heat: 'Обігрів', cool: 'Охолодж.', auto: 'Авто', dry: 'Осуш.', fan_only: 'Вентил.', heat_cool: 'Обігр./охол.' };
 export const FAN_UK = {
   auto: 'Авто', low: 'Низька', medium_low: 'Нижче сер.', medium: 'Середня', medium_high: 'Вище сер.', high: 'Висока',
@@ -46,9 +63,9 @@ export function stateText(st) {
   if (d === 'sensor' || d === 'number' || d === 'input_number') {
     if (a.device_class === 'timestamp') return relTime(st.state);
     const unit = a.unit_of_measurement ? ` ${a.unit_of_measurement}` : '';
-    return isFinite(Number(st.state)) ? `${num(st.state)}${unit}` : (STATE_UK[st.state] || st.state) + unit;
+    return isFinite(Number(st.state)) ? `${num(st.state)}${unit}` : (applianceText(st.entity_id, st.state) || STATE_UK[st.state] || st.state) + unit;
   }
-  return STATE_UK[st.state] || st.state;
+  return applianceText(st.entity_id, st.state) || STATE_UK[st.state] || st.state;
 }
 
 export function relTime(iso) {

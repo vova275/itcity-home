@@ -11,7 +11,13 @@
   // справжнє світло: без прихованих, службових і членів груп (щоб не рахувати двічі)
   const regOf = $derived(Object.fromEntries(ha.entities.map((e) => [e.entity_id, e])));
   const inGroup = $derived(new Set(Object.values(ha.states).filter((s) => s.entity_id.startsWith('light.') && Array.isArray(s.attributes.entity_id)).flatMap((s) => s.attributes.entity_id)));
-  const isLight = (s) => s.entity_id.startsWith('light.') && !regOf[s.entity_id]?.hidden_by && !regOf[s.entity_id]?.entity_category && !inGroup.has(s.entity_id);
+  const LIGHTISH = /світл|вулиц|тераса|підсвіт|гірлянд|lamp|light/i;
+  const isLight = (s) => {
+    const r = regOf[s.entity_id];
+    if (r?.hidden_by || r?.entity_category) return false;
+    if (s.entity_id.startsWith('light.')) return !inGroup.has(s.entity_id);
+    return s.entity_id.startsWith('switch.') && LIGHTISH.test((s.attributes.friendly_name || '') + ' ' + (r?.icon || s.attributes.icon || ''));
+  };
   const lightsOn = $derived(Object.values(ha.states).filter((s) => isLight(s) && s.state === 'on').length);
   const alarm = $derived(S('alarm_control_panel.okhorona')?.state);
   const ALARM = { disarmed: 'Знято', armed_away: 'Під охороною', armed_night: 'Нічний', armed_home: 'Частково', triggered: 'ТРИВОГА' };

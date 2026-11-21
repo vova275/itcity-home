@@ -19,6 +19,30 @@
   const dom = $derived(domainOf(device.main));
   const canToggle = $derived(TOGGLE_DOMAINS.has(dom) && st?.state !== 'unavailable');
   const unavailable = $derived(!st || st.state === 'unavailable');
+  // техніка: «Сушіння • ще 2 год 21 хв» замість потужності
+  const appliance = $derived.by(() => {
+    if (show) return null;
+    const ents = device.entities || [];
+    const find = (re) => ents.find((e) => re.test(e) && ha.states[e]);
+    const stateE = find(/_(machine_state|operation_state)$/);
+    if (!stateE) return null;
+    const stt = ha.states[stateE].state;
+    const running = ['run', 'delayedstart', 'pause'].includes(stt);
+    const jobE = find(/_job_state$/);
+    const job = jobE ? ha.states[jobE].state : null;
+    let txt = stateText(ha.states[stateE]);
+    if (running && job && !['none', 'unknown'].includes(job)) txt = stateText(ha.states[jobE]);
+    const endE = find(/_(completion_time|program_finish_time)$/);
+    const end = endE ? new Date(ha.states[endE].state) : null;
+    if (running && end && !isNaN(end) && end > Date.now()) {
+      const m = Math.round((end - Date.now()) / 60000);
+      txt += ` • ще ${m >= 60 ? Math.floor(m / 60) + ' год ' : ''}${m % 60} хв`;
+    } else {
+      const prE = find(/_(progress|program_progress)$/);
+      if (running && prE && isFinite(Number(ha.states[prE].state))) txt += ` • ${ha.states[prE].state}%`;
+    }
+    return { txt, running };
+  });
   // температура + тиск (котел): «48,5 °C • 1,5 bar»
   const extra = $derived.by(() => {
     if (show || st?.attributes?.device_class !== 'temperature') return '';
@@ -38,7 +62,7 @@
   }
 </script>
 
-<button class="tile" class:on class:unavailable onclick={() => openDevice(device)}>
+<button class="tile" class:on={on || appliance?.running} class:unavailable onclick={() => openDevice(device)}>
   <div class="top">
     <span class="ico" class:on><Icon name={icon || (show ? iconFor(shown) : iconFor(st, reg))} size={28} /></span>
     {#if canToggle}
@@ -49,7 +73,7 @@
     {/if}
   </div>
   <div class="name">{name || device.name || st?.attributes?.friendly_name || device.main}</div>
-  <div class="state" class:alert={unavailable || low}>{unavailable && !show ? '⚠ Недоступно' : stateText(shown) + extra}</div>
+  <div class="state" class:alert={unavailable || low}>{unavailable && !show ? '⚠ Недоступно' : appliance ? appliance.txt : stateText(shown) + extra}</div>
 </button>
 
 <style>

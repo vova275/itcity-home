@@ -85,6 +85,9 @@
         </div>
       </div>
     </div>
+    {#if !(a.today?.length || a.today_possible?.length || a.tomorrow?.length || a.tomorrow_possible?.length || actual?.includes('off'))}
+      <!-- без відключень — сітку не показуємо -->
+    {:else}
     {#each days as [title, row, isToday, list]}
       <div class="day"><b>{title}</b> <span>{(list || []).join(', ') || 'без відключень'}</span></div>
       <div class="grid">
@@ -99,6 +102,7 @@
         </div>
       {/if}
     {/each}
+    {/if}
     {#if !a.tomorrow}<div class="sub">Графік на завтра ще не опубліковано</div>{/if}
   </div>
 {/if}

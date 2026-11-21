@@ -8,6 +8,7 @@
   let items = $state([]);
   let system = $state({});
   let open = $state(false);
+  let big = $state(null);
 
   async function load() {
     try { items = await (await fetch('api/notifications')).json(); } catch {}
@@ -38,6 +39,9 @@
   {#if unread}<span class="cnt">{unread > 99 ? '99+' : unread}</span>{/if}
 </button>
 
+{#if big}
+  <div class="photo" onclick={back} role="presentation"><img src={big} alt="" /></div>
+{/if}
 {#if open}
   <div class="backdrop" onclick={back} role="presentation"></div>
   <div class="sheet" role="dialog" aria-modal="true">
@@ -57,7 +61,8 @@
       {#each items as n, i (n.t + '-' + i)}
         <div class="it" class:crit={n.critical} class:new={n.t > seen}>
           <Icon name={n.critical ? 'mdi:alert' : n.camera ? 'mdi:cctv' : 'mdi:bell-ring-outline'} size={22} />
-          <span class="tx"><b>{n.title}</b>{#if n.message}<small>{n.message}</small>{/if}</span>
+          <span class="tx"><b>{n.title}</b>{#if n.message}<small>{n.message}</small>{/if}
+            {#if n.image}<button class="ph" onclick={() => { big = n.image; pushLayer(() => (big = null)); }}><img src={n.image} alt="" loading="lazy" /></button>{/if}</span>
           <em>{timeAgo(new Date(n.t).toISOString())}</em>
         </div>
       {:else}<p class="muted">Поки що сповіщень немає. Тут з'являтимуться ворота, двері, відключення світла, протікання, техніка, батарейки.</p>{/each}
@@ -83,4 +88,8 @@
   em { font-style: normal; color: var(--muted); font-size: 12px; white-space: nowrap; }
   .x { all: unset; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); flex: none; }
   .muted { color: var(--muted); }
+  .ph { all: unset; cursor: zoom-in; display: block; margin-top: 8px; border-radius: 12px; overflow: hidden; max-width: 260px; }
+  .ph img { width: 100%; display: block; }
+  .photo { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.92); display: grid; place-items: center; cursor: zoom-out; }
+  .photo img { max-width: 100%; max-height: 100%; }
 </style>

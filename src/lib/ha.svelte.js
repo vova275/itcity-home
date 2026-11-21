@@ -27,7 +27,8 @@ export function send(msg) {
   return new Promise((resolve, reject) => {
     if (!ws || ws.readyState !== 1) return reject(new Error('Немає зв’язку з HA'));
     const id = nextId++;
-    pending.set(id, { resolve, reject });
+    const timer = setTimeout(() => { if (pending.delete(id)) reject(new Error('Час очікування минув')); }, 20000);
+    pending.set(id, { resolve: (v) => { clearTimeout(timer); resolve(v); }, reject: (e) => { clearTimeout(timer); reject(e); } });
     ws.send(JSON.stringify({ ...msg, id }));
   });
 }

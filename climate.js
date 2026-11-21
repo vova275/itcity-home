@@ -93,7 +93,7 @@ export function createClimate({ dataDir, haWsUrl, token, log = console.log }) {
       if (m.type === 'result') { const p = pending.get(m.id); if (p) { pending.delete(m.id); m.success ? p.resolve(m.result) : p.reject(new Error(m.error?.message)); } return; }
       if (m.type === 'event' && m.event?.event_type === 'itcity_notification') {
         const d = m.event.data || {};
-        notifs.unshift({ t: Date.now(), title: d.title || '', message: d.message || '', critical: String(d.critical) === 'True' || d.critical === true, camera: d.camera || '' });
+        notifs.unshift({ t: Date.now(), title: d.title || '', message: d.message || '', critical: String(d.critical) === 'True' || d.critical === true, camera: d.camera || '', image: d.image || '' });
         notifs.splice(200);
         try { fs.writeFileSync(notifFile, JSON.stringify(notifs)); } catch {}
         return;
