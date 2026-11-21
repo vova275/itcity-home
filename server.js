@@ -49,6 +49,22 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = decodeURIComponent(url.pathname);
 
+  // Камери: знімок і живе MJPEG-відео через сервер (токен HA лишається на сервері)
+  const cm = p.match(/\/api\/camera\/(snap|live)\/(camera\.[\w-]+)$/);
+  if (cm) {
+    const base = HA_URL.endsWith('/core') ? HA_URL + '/api' : HA_URL + '/api';
+    const target = `${base}/${cm[1] === 'live' ? 'camera_proxy_stream' : 'camera_proxy'}/${cm[2]}`;
+    const up = http.get(target, { headers: { Authorization: `Bearer ${HA_TOKEN}` } }, (r) => {
+      res.writeHead(r.statusCode || 502, { 'Content-Type': r.headers['content-type'] || 'image/jpeg', 'Cache-Control': 'no-store' });
+      r.pipe(res);
+    });
+    up.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end(); });
+    req.on('close', () => up.destroy());
+    return;
+  }
+
+  if (p.endsWith('/api/notifications')) return sendJson(res, 200, climate.notifications());
+
   const ci = p.indexOf('/api/climate');
   if (ci >= 0) {
     const sub = p.slice(ci + '/api/climate'.length).replace(/^\//, '');

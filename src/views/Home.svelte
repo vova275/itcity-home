@@ -5,6 +5,7 @@
   import Favorites from '../components/Favorites.svelte';
   import Scenes from '../components/Scenes.svelte';
   import WeatherCard from '../components/WeatherCard.svelte';
+  import Bell from '../components/Bell.svelte';
   import { ha } from '../lib/ha.svelte.js';
   import { greeting, WEATHER_UK, num } from '../lib/format.js';
 
@@ -15,6 +16,7 @@
 
 <header class="hero">
   <h1>{greeting()}</h1>
+  <Bell />
 </header>
 
 <div class="top">
@@ -35,7 +37,7 @@
 <Favorites />
 
 <style>
-  .hero { padding: 6px 2px 16px; }
+  .hero { padding: 6px 2px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   h1 { font-size: 34px; margin: 0; font-weight: 800; letter-spacing: -.02em; }
   .hero p { margin: 4px 0 0; color: var(--muted); font-size: 18px; }
   h2 { font-size: 24px; margin: 26px 2px 12px; font-weight: 800; }

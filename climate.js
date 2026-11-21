@@ -43,6 +43,9 @@ const DEFAULT_CONFIG = {
 
 export function createClimate({ dataDir, haWsUrl, token, log = console.log }) {
   const file = path.join(dataDir, 'climate.json');
+  const notifFile = path.join(dataDir, 'notifications.json');
+  let notifs = [];
+  try { notifs = JSON.parse(fs.readFileSync(notifFile, 'utf8')); } catch {}
   let cfg = load();
   const states = {};
   const status = { zones: {}, boiler: {}, updated: 0, connected: false };
@@ -84,9 +87,17 @@ export function createClimate({ dataDir, haWsUrl, token, log = console.log }) {
         for (const s of all) states[s.entity_id] = s;
         await send({ type: 'subscribe_events', event_type: 'state_changed' });
         await send({ type: 'subscribe_events', event_type: 'state_reported' }).catch(() => {});
+        await send({ type: 'subscribe_events', event_type: 'itcity_notification' }).catch(() => {});
         return;
       }
       if (m.type === 'result') { const p = pending.get(m.id); if (p) { pending.delete(m.id); m.success ? p.resolve(m.result) : p.reject(new Error(m.error?.message)); } return; }
+      if (m.type === 'event' && m.event?.event_type === 'itcity_notification') {
+        const d = m.event.data || {};
+        notifs.unshift({ t: Date.now(), title: d.title || '', message: d.message || '', critical: String(d.critical) === 'True' || d.critical === true, camera: d.camera || '' });
+        notifs.splice(200);
+        try { fs.writeFileSync(notifFile, JSON.stringify(notifs)); } catch {}
+        return;
+      }
       if (m.type === 'event' && m.event?.event_type === 'state_reported') {
         const st = states[m.event.data.entity_id];
         if (st) st.last_reported = m.event.data.last_reported;
@@ -248,5 +259,5 @@ export function createClimate({ dataDir, haWsUrl, token, log = console.log }) {
   connect();
   setInterval(() => tick().catch((e) => log('[climate]', e.message)), 30e3);
   setTimeout(() => tick().catch(() => {}), 5000);
-  return { api, PRESETS };
+  return { api, PRESETS, notifications: () => notifs };
 }
