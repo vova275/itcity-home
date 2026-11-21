@@ -12,11 +12,21 @@
     loading = true;
     const set = new Set();
     try {
-      const reqs = device.device
-        ? [send({ type: 'search/related', item_type: 'device', item_id: device.device.id })]
-        : device.entities.map((e) => send({ type: 'search/related', item_type: 'entity', item_id: e }));
-      for (const r of await Promise.all(reqs)) (r.automation || []).forEach((a) => set.add(a));
+      // і пристрій, і кожна його сутність (автоматизації часто посилаються на сутності, а не на пристрій)
+      const reqs = [
+        ...(device.device ? [send({ type: 'search/related', item_type: 'device', item_id: device.device.id })] : []),
+        ...device.entities.map((e) => send({ type: 'search/related', item_type: 'entity', item_id: e })),
+      ];
+      for (const r of await Promise.allSettled(reqs)) (r.value?.automation || []).forEach((a) => set.add(a));
     } catch {}
+    // сценарії «Котел: …», «Prana: …» керують пристроєм через допоміжні сутності — додаємо за назвою
+    const key = (device.name || '').split(/[\s,]+/)[0].toLowerCase();
+    if (['котел', 'prana', 'ворота', 'техніка'].includes(key) || /посудомий|пральн|сушар/i.test(device.name || '')) {
+      const pref = /посудомий|пральн|сушар/i.test(device.name || '') ? 'техніка' : key;
+      for (const st of Object.values(ha.states)) {
+        if (st.entity_id.startsWith('automation.') && (st.attributes.friendly_name || '').toLowerCase().startsWith(pref + ':')) set.add(st.entity_id);
+      }
+    }
     ids = [...set]; loading = false;
   }
   $effect(() => { device; load(); });
