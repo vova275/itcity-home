@@ -1,6 +1,6 @@
 # ITCITY Home
 
-**English** · [Українська](#українською)
+**English** · [Українська](#українською) · [☕ Support](#support)
 
 A clean, touch-friendly dashboard for **Home Assistant** in the style of modern smart-home apps: rooms, square tiles, and a device sheet with tabs that opens when you tap a tile. It runs as a Home Assistant add-on (app) and appears in the sidebar. Works on phones, tablets and desktops.
 
@@ -39,7 +39,9 @@ Stack: Svelte 5 + Vite SPA, a small Node server (static files, WebSocket proxy t
 
 If ITCITY Home is useful to you, you can say thanks here 💛
 
-<!-- SUPPORT_LINKS -->
+[![Support via Monobank](https://img.shields.io/badge/☕_Buy_me_a_coffee-Monobank-000000?style=for-the-badge)](https://send.monobank.ua/jar/7Zv7oTCnWc)
+
+Any Visa / Mastercard, Apple Pay or Google Pay works, from any country.
 
 Licence: MIT.
 
@@ -66,4 +68,4 @@ Licence: MIT.
 
 Якщо застосунок вам корисний, можна підтримати автора 💛
 
-<!-- SUPPORT_LINKS -->
+[![Подякувати через Монобанку](https://img.shields.io/badge/☕_Подякувати-Банка_Monobank-000000?style=for-the-badge)](https://send.monobank.ua/jar/7Zv7oTCnWc)
