@@ -127,13 +127,13 @@
   .sw.on { background: var(--accent); } .sw.on i { left: 21px; }
   .label { margin: 18px 0 8px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .seg button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 8px; border-radius: 18px; background: var(--tile); text-align: center; }
+  .seg button { all: unset; cursor: pointer; box-sizing: border-box; min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; border-radius: 18px; background: var(--tile); text-align: center; }
   .seg button small { color: var(--muted); font-size: 11px; }
   .seg button.sel { background: var(--accent); color: #fff; } .seg button.sel small { color: rgba(255,255,255,.8); }
-  .setp { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px 10px 16px; border-radius: 18px; background: var(--tile); }
-  .setp span { flex: 1; display: flex; align-items: center; gap: 8px; }
-  .setp b { font-size: 26px; min-width: 64px; text-align: center; } .setp b.wide { min-width: 0; }
-  .setp button { all: unset; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
+  .setp { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 10px 10px 14px; min-width: 0; border-radius: 18px; background: var(--tile); }
+  .setp span { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
+  .setp b { font-size: clamp(20px, 6vw, 26px); min-width: 52px; text-align: center; flex: none; } .setp b.wide { min-width: 0; }
+  .setp button { all: unset; cursor: pointer; width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
   .setp.small b { font-size: 18px; } .setp.small button { width: 36px; height: 36px; }
   .fold { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 14px 4px 0; color: var(--muted); }
   .last { color: var(--muted); font-size: 12px; margin-top: 14px; }

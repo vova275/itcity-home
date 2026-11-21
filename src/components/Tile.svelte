@@ -86,7 +86,7 @@
   .tile.on { background: var(--tile-on); }
   .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; flex: 1; min-height: 40px; min-width: 0; }
   .ico { flex: none; }
-  @media (max-width: 480px) { .tile { padding: 12px; min-height: 128px; } .pw { width: 34px; height: 34px; } .name { font-size: 14px; } }
+  @media (max-width: 480px) { .tile { padding: 11px; min-height: 124px; } .pw { width: 34px; height: 34px; } }
   @media (min-width: 600px) { .tile { aspect-ratio: 1 / 1; } }
   .ico { color: var(--text); opacity: .9; }
   .ico.on { color: var(--accent-warm); opacity: 1; }
@@ -97,10 +97,11 @@
   .pw.on { background: var(--accent-soft); color: var(--accent); }
   .pw.busy { opacity: .5; }
   .name {
-    font-size: 15px; font-weight: 600; line-height: 1.22; margin-top: 10px; overflow-wrap: break-word; hyphens: auto;
+    font-size: clamp(13px, 3.9vw, 15px); font-weight: 600; line-height: 1.2; margin-top: 8px; overflow-wrap: anywhere; hyphens: auto; min-width: 0;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
-  .state { font-size: 13px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .state { font-size: clamp(12px, 3.4vw, 13px); color: var(--muted); margin-top: 3px; line-height: 1.25; min-width: 0;
+    overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .state.alert { color: var(--danger); }
   .unavailable { opacity: .75; }
 </style>

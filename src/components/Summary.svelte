@@ -62,5 +62,6 @@
   .it:active { transform: scale(.98); }
   .i { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--pw); }
   .t { display: flex; flex-direction: column; min-width: 0; }
-  .t b { font-size: 16px; } .t small { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t b { font-size: clamp(14px, 4vw, 16px); overflow-wrap: anywhere; } .t small { color: var(--muted); font-size: clamp(12px, 3.6vw, 14px); line-height: 1.25;
+    overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 </style>

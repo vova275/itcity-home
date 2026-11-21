@@ -121,13 +121,13 @@
   .bi { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,107,53,.18); color: #ff6b35; flex: none; }
   .bt { flex: 1; display: flex; flex-direction: column; min-width: 0; } .bt b { font-size: 17px; } .bt small { color: var(--muted); font-size: 13px; }
   .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-  .seg button { all: unset; cursor: pointer; text-align: center; padding: 12px 2px; border-radius: 14px; background: var(--tile); font-size: 13px; }
+  .seg button { all: unset; cursor: pointer; text-align: center; padding: 12px 2px; border-radius: 14px; background: var(--tile); font-size: clamp(12px, 3.6vw, 14px); min-width: 0; overflow-wrap: anywhere; }
   .seg button.sel { background: var(--accent); color: #fff; }
   .zones { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--gap); }
   .zone { background: var(--tile); border-radius: var(--r-tile); padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .zone.heat { background: linear-gradient(160deg, #5a2c0e, var(--tile) 70%); }
   .zone.off { opacity: .6; }
-  .zh { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; } .zh b { font-size: 18px; flex: 1; }
+  .zh { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 0; } .zh b { font-size: 18px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .rb { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
   .temp { font-size: 56px; font-weight: 300; line-height: 1; text-align: center; margin: 6px 0; } .temp span { font-size: 28px; vertical-align: top; }
   .tgt { display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 16px; } .tgt b { font-size: 22px; }
@@ -135,6 +135,6 @@
   .valve { display: flex; align-items: center; gap: 6px; justify-content: center; color: var(--muted); font-size: 12px; opacity: .85; }
   .note { display: flex; gap: 8px; align-items: flex-start; margin: 12px 2px 0; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, #ffd60a 12%, var(--tile)); font-size: 14px; }
   .mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--gap); }
-  .mini button { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 18px; background: var(--tile); }
-  .mini b { font-size: 20px; } .mini span { color: var(--muted); }
+  .mini button { all: unset; cursor: pointer; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 16px; border-radius: 18px; background: var(--tile); min-width: 0; }
+  .mini b { font-size: 20px; flex: none; } .mini span { color: var(--muted); min-width: 0; overflow-wrap: anywhere; line-height: 1.2; }
 </style>
