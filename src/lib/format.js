@@ -59,7 +59,7 @@ export function stateText(st) {
     return `${HVAC_UK[st.state] || st.state} ${a.temperature != null ? num(a.temperature, 1) + '°' : ''}${cur ? ' • ' + cur : ''}`.trim();
   }
   if (d === 'light' && st.state === 'on' && a.brightness != null) return `Увімк. • ${Math.round(a.brightness / 2.55)}%`;
-  if (d === 'fan' && st.state === 'on' && a.percentage != null) return `Увімк. • ${a.percentage}%`;
+  if (d === 'fan' && st.state === 'on' && a.percentage != null) return `Увімк. • ${fanLevelText(st)}`;
   if (d === 'sensor' || d === 'number' || d === 'input_number') {
     if (a.device_class === 'timestamp') return relTime(st.state);
     const unit = a.unit_of_measurement ? ` ${a.unit_of_measurement}` : '';
@@ -96,3 +96,22 @@ export const WEATHER_UK = {
   'lightning-rainy': 'Гроза з дощем', partlycloudy: 'Мінлива хмарність', pouring: 'Злива', rainy: 'Дощ', snowy: 'Сніг',
   'snowy-rainy': 'Мокрий сніг', sunny: 'Сонячно', windy: 'Вітряно', 'windy-variant': 'Вітряно',
 };
+
+// Вентилятори зі ступенями (Prana: крок 16,67 % → швидкості 1–5, 6-та = турбо): показуємо цифру, як на пульті.
+export function fanLevels(st) {
+  const step = st?.attributes?.percentage_step;
+  if (!step || step < 5) return null;
+  let n = Math.round(100 / step);
+  if (n === 6 && st.attributes.preset_modes?.includes('boost')) n = 5;
+  return { n, step };
+}
+export function fanLevel(st) {
+  const step = st?.attributes?.percentage_step;
+  const p = st?.attributes?.percentage;
+  return step && p != null ? Math.round(p / step) : null;
+}
+export function fanLevelText(st) {
+  if (st?.attributes?.preset_mode === 'boost') return 'Турбо';
+  const lv = fanLevel(st);
+  return lv != null ? `швидкість ${lv}` : `${st?.attributes?.percentage ?? ''}%`;
+}
