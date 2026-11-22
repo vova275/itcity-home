@@ -8,13 +8,24 @@
   import { setView } from '../lib/ui.svelte.js';
 
   const devices = $derived(buildDevices(ha));
-  const favs = $derived(settings.favorites.filter((e) => ha.states[e]));
+  // один пристрій — одна плитка: друга сутність того ж пристрою (напр. витяжка Prana, другий датчик котла) не дублюється
+  const favs = $derived.by(() => {
+    const seen = new Set();
+    return settings.favorites.filter((e) => {
+      if (!ha.states[e]) return false;
+      const d = devices.find((x) => x.entities.includes(e));
+      const key = d?.device?.id || e;
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+  });
   let edit = $state(false);
   let drag = $state(null);          // { id, x, y, w, h } — що тягнемо і де палець
   let adding = $state(null);
 
   const HIDE = new Set(['update', 'event', 'tts', 'stt', 'conversation', 'notify', 'todo', 'image']);
-  const addFilter = (e) => !HIDE.has(domainOf(e)) && !settings.favorites.includes(e);
+  const favDevs = $derived(new Set(favs.map((e) => devices.find((x) => x.entities.includes(e))?.device?.id).filter(Boolean)));
+  const addFilter = (e) => !HIDE.has(domainOf(e)) && !settings.favorites.includes(e) && !favDevs.has(devices.find((x) => x.entities.includes(e))?.device?.id);
 
   function onDown(ev, id) {
     if (!edit) return;
