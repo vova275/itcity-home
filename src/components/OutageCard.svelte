@@ -55,6 +55,9 @@
       return 'on';
     });
   }
+  const hrs = (m) => (Math.round(m / 6) / 10).toString().replace('.', ',') + ' год';
+  const dur = (iv) => { const [[x, y]] = parse([iv]); return y - x; };
+  const total = (lst) => (lst || []).reduce((t, iv) => t + dur(iv), 0);
   const left = (iso) => {
     const m = Math.max(0, Math.ceil((new Date(iso) - now) / 60000));
     return (m >= 60 ? `${Math.floor(m / 60)} год ` : '') + `${m % 60} хв`;
@@ -89,7 +92,8 @@
       <!-- без відключень — сітку не показуємо -->
     {:else}
     {#each days as [title, row, isToday, list]}
-      <div class="day"><b>{title}</b> <span>{(list || []).join(', ') || 'без відключень'}</span></div>
+      <div class="day"><b>{title}</b> <span>{(list || []).map((iv) => `${iv} (${hrs(dur(iv))})`).join(', ') || 'без відключень'}</span></div>
+      {#if list?.length}<div class="sum"><span class="off">⚡ без світла {hrs(total(list))}</span><span class="onn">💡 зі світлом {hrs(1440 - total(list))}</span></div>{/if}
       <div class="grid">
         {#each row as c, i}
           <div class="cell {c}" class:now={isToday && i === curHalf}>{#if i % 2 === 0}<em>{String(i / 2).padStart(2, '0')}</em>{/if}</div>
@@ -114,7 +118,8 @@
   .ico { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: rgba(48,209,88,.18); color: #30d158; flex: none; }
   .off .ico { background: rgba(255,69,58,.2); color: #ff453a; }
   .big { font-size: 18px; font-weight: 700; } .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .day { margin: 12px 0 6px; font-size: 13px; } .day span { color: var(--muted); }
+  .day { margin: 12px 0 4px; font-size: 13px; } .day span { color: var(--muted); }
+  .sum { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; margin-bottom: 6px; } .sum .off { color: #ff453a; } .sum .onn { color: #30d158; }
   .grid { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; }
   @media (max-width: 520px) { .grid { grid-template-columns: repeat(12, minmax(0, 1fr)); } }
   .cell { height: 22px; border-radius: 4px; position: relative; }
