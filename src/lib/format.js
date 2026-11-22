@@ -11,6 +11,7 @@ const STATE_UK = {
 };
 // побутова техніка (SmartThings, Home Connect): стан, етап, програми
 const APPLIANCE_UK = {
+  always_on: 'Завжди', None: 'Немає',
   run: 'Працює', stop: 'Зупинено', pause: 'Пауза', ready: 'Готова', inactive: 'Вимкнена', delayedstart: 'Відкладений старт',
   actionrequired: 'Потрібна дія', finished: 'Завершено', finish: 'Завершено', error: 'Помилка', aborting: 'Скасування',
   none: '—', wash: 'Прання', ai_wash: 'Прання (AI)', pre_wash: 'Попереднє прання', air_wash: 'Освіження повітрям', rinse: 'Полоскання',
@@ -22,7 +23,7 @@ const APPLIANCE_UK = {
   dishcare_dishwasher_program_quick_65: 'Швидка 65°', dishcare_dishwasher_program_night_wash: 'Нічна (тиха)', dishcare_dishwasher_program_machine_care: 'Догляд за машиною',
   dishcare_dishwasher_program_pre_rinse: 'Попереднє ополіскування',
 };
-const APPLIANCE_RE = /(machine_state|job_state|operation_state|posudomiika|pralna|susharka|washer|dryer|dishwasher)/;
+const APPLIANCE_RE = /(machine_state|job_state|operation_state|posudomiika|pralna|susharka|washer|dryer|dishwasher|konditsioner)/;
 export function applianceText(entityId, state) {
   return APPLIANCE_RE.test(entityId) ? APPLIANCE_UK[state] : undefined;
 }
@@ -30,6 +31,14 @@ export const HVAC_UK = { off: 'Вимк.', heat: 'Обігрів', cool: 'Охо
 export const FAN_UK = {
   auto: 'Авто', low: 'Низька', medium_low: 'Нижче сер.', medium: 'Середня', medium_high: 'Вище сер.', high: 'Висока',
   turbo: 'Турбо', quiet: 'Тиха',
+};
+// жалюзі кондиціонера (Gree): вертикальні / горизонтальні
+export const SWING_UK = {
+  default: 'Як за замовчуванням', off: 'Вимкнено', on: 'Увімкнено', both: 'В обидва боки', vertical: 'Вгору-вниз', horizontal: 'Вліво-вправо',
+  swing_full: 'Хитання повністю', fixed_upmost: 'Вгорі', fixed_middle_up: 'Вище середини', fixed_middle: 'Посередині',
+  fixed_middle_low: 'Нижче середини', fixed_lowest: 'Внизу', swing_downmost: 'Хитання внизу', swing_middle_low: 'Хитання нижче сер.',
+  swing_middle: 'Хитання посередині', swing_middle_up: 'Хитання вище сер.', swing_upmost: 'Хитання вгорі',
+  fixed_leftmost: 'Ліворуч', fixed_middle_left: 'Лівіше середини', fixed_middle_right: 'Правіше середини', fixed_rightmost: 'Праворуч',
 };
 
 const BIN_DC = {
