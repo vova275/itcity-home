@@ -39,6 +39,20 @@
     fetch(`api/camera/refresh/${entity}`).then((r) => r.json()).then((d) => { if (d.url) frame = d.url; }).catch(() => {});
   });
   $effect(() => { if (full && bigVideo) return play(bigVideo); });
+
+  // закрити: як жест «назад»; якщо історія з якоїсь причини не спрацювала — закриваємо примусово
+  function close() {
+    if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+    back();
+    setTimeout(() => { full = false; }, 400);
+  }
+  $effect(() => {
+    if (!full) return;
+    const k = (e) => { if (e.key === 'Escape' && !document.fullscreenElement) close(); };
+    addEventListener('keydown', k); return () => removeEventListener('keydown', k);
+  });
+  let box = $state();
+  const toggleFs = () => (document.fullscreenElement ? document.exitFullscreen() : box?.requestFullscreen?.())?.catch?.(() => {});
 </script>
 
 {#if st}
@@ -49,11 +63,17 @@
     <span class="lbl"><Icon name="mdi:cctv" size={18} />{name || st.attributes.friendly_name?.replace(/^IP CAMERA\s*/, '') || 'Камера'}</span>
   </button>
   {#if full}
-    <div class="full" role="dialog" aria-modal="true">
-      {#if frame}<img class="poster" src={frame} alt="" />{/if}
-      <video bind:this={bigVideo} muted autoplay playsinline controls></video>
-      {#if error}<span class="err">{error}</span>{/if}
-      <button class="x" onclick={back} aria-label="Закрити"><Icon name="mdi:close" /></button>
+    <div class="full" role="dialog" aria-modal="true" onclick={(e) => { if (e.target === e.currentTarget) close(); }} onkeydown={() => {}} tabindex="-1">
+      <div class="box" bind:this={box}>
+        {#if frame}<img class="poster" src={frame} alt="" />{/if}
+        <video bind:this={bigVideo} muted autoplay playsinline controls controlslist="nofullscreen"></video>
+        {#if error}<span class="err">{error}</span>{/if}
+        <div class="bar">
+          <span class="ttl"><Icon name="mdi:cctv" size={18} />{name || st.attributes.friendly_name?.replace(/^IP CAMERA\s*/, '') || 'Камера'}</span>
+          <button class="fs" onclick={toggleFs} aria-label="На весь екран" title="На весь екран / зменшити"><Icon name="mdi:fullscreen" /></button>
+          <button class="x" onclick={close} aria-label="Закрити" title="Закрити (Esc)"><Icon name="mdi:close" /></button>
+        </div>
+      </div>
     </div>
   {/if}
 {/if}
@@ -70,7 +90,18 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff453a; animation: blink 1.6s infinite; }
   @keyframes blink { 50% { opacity: .3; } }
   .full { position: fixed; inset: 0; z-index: 60; background: #000; display: grid; place-items: center; }
-  .full video { position: relative; max-width: 100%; max-height: 100%; width: 100%; }
-  .x { all: unset; cursor: pointer; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; width: 44px; height: 44px; border-radius: 50%;
-    background: rgba(255,255,255,.2); color: #fff; display: grid; place-items: center; }
+  .box { position: relative; width: 100%; height: 100%; display: grid; place-items: center; background: #000; }
+  .box video { position: relative; max-width: 100%; max-height: 100%; width: 100%; }
+  .bar { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 10px; right: 10px; display: flex; align-items: center; gap: 8px; }
+  .ttl { margin-right: auto; display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 12px; background: rgba(0,0,0,.55); color: #fff; font-size: 14px; }
+  .bar button { all: unset; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; background: rgba(40,40,40,.75); color: #fff; display: grid; place-items: center; }
+  .bar button:hover { background: rgba(80,80,80,.9); }
+  .fs { display: none !important; }
+  /* ПК: вікно по центру, навколо — затемнення (клік повз вікно закриває) */
+  @media (min-width: 900px) and (hover: hover) {
+    .full { background: rgba(0,0,0,.7); backdrop-filter: blur(4px); cursor: zoom-out; }
+    .box { width: min(1200px, 88vw); height: auto; aspect-ratio: 16 / 9; max-height: 85vh; border-radius: 20px; overflow: hidden; cursor: default; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+    .box:fullscreen { width: 100vw; max-height: none; border-radius: 0; }
+    .fs { display: grid !important; }
+  }
 </style>

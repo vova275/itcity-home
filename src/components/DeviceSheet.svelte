@@ -27,7 +27,7 @@
     settings.favorites = fav ? settings.favorites.filter((x) => x !== id) : [...settings.favorites, id];
     saveSettings();
   }
-  function onKey(e) { if (e.key === 'Escape') closeSheet(); }
+  function onKey(e) { if (e.key === 'Escape' && ui.sheet && !document.querySelector('.full')) closeSheet(); }
 </script>
 
 <svelte:window onkeydown={onKey} />

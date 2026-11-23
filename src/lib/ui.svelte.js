@@ -27,12 +27,14 @@ export function pushLayer(close) {
 }
 
 /** Закрити верхній шар так само, як це зробив би жест «назад». */
+let going = 0;  // скільки «назад» уже в дорозі — щоб два обробники не зробили зайвий крок
 export function back() {
-  if (layers.length) W.history.back();
+  if (layers.length > going) { going++; W.history.back(); }
 }
 
 if (W) {
   W.addEventListener('popstate', (e) => {
+    going = 0;
     if (!layers.length) return;
     const lvl = e.state?.itcity || 0;
     // закрити всі шари вище рівня, на який повернулись
