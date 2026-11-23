@@ -13,6 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createClimate } from './climate.js';
+import { createOutages } from './outages.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8099);
@@ -29,6 +30,7 @@ const upstreamWs = HA_URL.endsWith('/core')
 if (!HA_TOKEN) console.warn('[itcity-home] HA_TOKEN/SUPERVISOR_TOKEN не задано — підключення до HA не вдасться');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const climate = createClimate({ dataDir: DATA_DIR, haWsUrl: upstreamWs, token: HA_TOKEN });
+const outages = createOutages({ dataDir: DATA_DIR, haWsUrl: upstreamWs, token: HA_TOKEN });
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -102,6 +104,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (p.endsWith('/api/outages')) return sendJson(res, 200, outages.api());
   if (p.endsWith('/api/notifications')) return sendJson(res, 200, climate.notifications());
 
   const ci = p.indexOf('/api/climate');

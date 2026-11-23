@@ -1,7 +1,9 @@
 <script>
   // Графік відключень (інтеграція ukraine_outages): статус + сітка по пів години на сьогодні/завтра.
   import Icon from './Icon.svelte';
-  import { ha, send } from '../lib/ha.svelte.js';
+  import { ha } from '../lib/ha.svelte.js';
+  import { openOutages } from '../lib/ui.svelte.js';
+  import { out, loadOutages, halfHours, clip, sum, dayStart, dur as fdur, hm } from '../lib/outages.svelte.js';
 
   let { entity = 'binary_sensor.svitlo_vidkliuchennia_zaraz', back = 'sensor.svitlo_uvimknennia', next = 'sensor.svitlo_nastupne_vidkliuchennia', grid = 'binary_sensor.svitlo_merezha' } = $props();
   const s = $derived(ha.states[entity]);
@@ -14,34 +16,13 @@
   const mismatch = $derived(hasGrid && off !== plannedOff);
   const since = $derived(hasGrid ? g.last_changed : null);
 
-  // фактичні відключення сьогодні по пів години (історія енергомонітора)
-  let actual = $state(null);
-  async function loadActual() {
-    if (!ha.connected || !ha.states[grid]) return;
-    const start = new Date(); start.setHours(0, 0, 0, 0);
-    // напруга фаз з лічильника за день: є хоч на одній фазі >150 В — світло було; немає даних — сіре
-    const V = [1, 2, 3].map((i) => `sensor.lichylnyk_napruga_l${i}`);
-    try {
-      const r = await send({ type: 'history/history_during_period', start_time: start.toISOString(), entity_ids: V, minimal_response: true, no_attributes: true });
-      const row = Array(48).fill(null);
-      const has = Array.from({ length: 48 }, () => [false, false]);
-      for (const e of V) {
-        const pts = (r[e] || []).map((x) => [(x.lu ?? x.lc) * 1000, parseFloat(x.s)]);
-        for (let i = 0; i < pts.length; i++) {
-          const [t0, v] = pts[i]; if (isNaN(v)) continue;
-          const t1 = i + 1 < pts.length ? pts[i + 1][0] : Date.now();
-          const h0 = Math.max(0, Math.floor((t0 - start.getTime()) / 1800000)), h1 = Math.min(47, Math.floor((t1 - 1 - start.getTime()) / 1800000));
-          for (let h = h0; h <= h1; h++) has[h][v > 150 ? 0 : 1] = true;
-        }
-      }
-      // пів години червона, якщо в ній була хвилина без напруги на всіх фазах (спрощено: будь-яке падіння)
-      for (let h = 0; h < 48; h++) row[h] = has[h][1] ? 'off' : has[h][0] ? 'on' : null;
-      actual = row;
-    } catch {}
-  }
-  $effect(() => { ha.connected; g?.state; loadActual(); const t = setInterval(loadActual, 300000); return () => clearInterval(t); });
-  const ago = (iso) => { const m = Math.max(0, Math.round((now - new Date(iso)) / 60000)); return (m >= 60 ? `${Math.floor(m / 60)} год ` : '') + `${m % 60} хв`; };
   let now = $state(Date.now());
+  // фактичні відключення сьогодні — з журналу на сервері (за датчиком «Світло від мережі»)
+  const actual = $derived(out.loaded ? halfHours(out.events, dayStart(now), now) : null);
+  const factSegs = $derived(clip(out.events, dayStart(now), now + 1, now));
+  const factOff = $derived(sum(factSegs));
+  $effect(() => { ha.connected; g?.state; loadOutages(); const t = setInterval(loadOutages, 120000); return () => clearInterval(t); });
+  const ago = (iso) => { const m = Math.max(0, Math.round((now - new Date(iso)) / 60000)); return (m >= 60 ? `${Math.floor(m / 60)} год ` : '') + `${m % 60} хв`; };
   $effect(() => { const t = setInterval(() => (now = Date.now()), 30000); return () => clearInterval(t); });
 
   const mins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
@@ -100,7 +81,8 @@
         {/each}
       </div>
       {#if isToday && actual}
-        <div class="day fact"><b>Фактично</b> <span>за енергомонітором</span></div>
+        <div class="day fact"><b>Фактично</b> <span>{#if factSegs.length}{factSegs.map(([x, y]) => `${hm(x)}–${off && y >= now - 60000 ? 'зараз' : hm(y)}`).join(', ')}{:else}відключень не було{/if}</span></div>
+        {#if factSegs.length}<div class="sum"><span class="off">⚡ фактично без світла {fdur(factOff)}</span></div>{/if}
         <div class="grid thin">
           {#each actual as c, i}<div class="cell {c ? 'a' + c : 'none'}" class:now={i === curHalf}></div>{/each}
         </div>
@@ -108,6 +90,7 @@
     {/each}
     {/if}
     {#if !a.tomorrow}<div class="sub">Графік на завтра ще не опубліковано</div>{/if}
+    <button class="hist" onclick={openOutages}><Icon name="mdi:chart-timeline-variant" size={18} />Історія відключень</button>
   </div>
 {/if}
 
@@ -131,4 +114,5 @@
   .thin .cell { height: 10px; }
   .cell.aon { background: rgba(48,209,88,.55); } .cell.aoff { background: #ff453a; } .cell.none { background: var(--pw); }
   .fact { margin-top: 6px; }
+  .hist { all: unset; cursor: pointer; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--pw); font-size: 13px; }
 </style>

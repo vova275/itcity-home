@@ -3,6 +3,7 @@
   import Icon from './components/Icon.svelte';
   import DeviceSheet from './components/DeviceSheet.svelte';
   import ListSheet from './components/ListSheet.svelte';
+  import OutageHistory from './components/OutageHistory.svelte';
   import Home from './views/Home.svelte';
   import Rooms from './views/Rooms.svelte';
   import Energy from './views/Energy.svelte';
@@ -62,6 +63,7 @@
 </div>
 
 <ListSheet />
+<OutageHistory />
 <DeviceSheet />
 
 <style>

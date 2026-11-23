@@ -7,6 +7,7 @@ export const ui = $state({
   sheet: null,           // відкритий пристрій
   sheetTab: 'control',
   list: null,            // { title, entities: () => [...], empty, show }
+  outages: false,        // вікно «Історія відключень»
 });
 
 const layers = [];       // функції закриття, верхня — остання
@@ -56,4 +57,9 @@ export function closeSheet() { back(); }
 export function openList(list) {
   ui.list = list;
   pushLayer(() => { ui.list = null; });
+}
+
+export function openOutages() {
+  ui.outages = true;
+  pushLayer(() => { ui.outages = false; });
 }
