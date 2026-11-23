@@ -27,11 +27,11 @@
   const temps = $derived(['spalnia', 'gostova', 'dytiacha', 'zal'].map((r) => val(`sensor.${r}_temperatura`)).filter(isFinite));
   const hums = $derived(['spalnia', 'gostova', 'dytiacha', 'zal'].map((r) => val(`sensor.${r}_vologist`)).filter(isFinite));
   const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
-  const lowBat = $derived(Object.values(ha.states).filter((s) => s.attributes?.device_class === 'battery' && !s.entity_id.includes('sm_s928b') && Number(s.state) < 25).length);
+  const lowBat = $derived(Object.values(ha.states).filter((s) => s.attributes?.device_class === 'battery' && !s.entity_id.includes('sm_s928b') && (s.state === 'unavailable' || Number(s.state) < 25)).length);
 
   const devices = $derived(buildDevices(ha));
   const open = (e) => openDevice(deviceForEntity(devices, e));
-  const list = (title, fn, empty, show = false) => openList({ title, entities: fn, empty, show });
+  const list = (title, fn, empty, show = false, group = false) => openList({ title, entities: fn, empty, show, group });
   const all = () => Object.values(ha.states);
   const items = $derived([
     { icon: 'mdi:lightbulb-group', color: '#ffd60a', name: 'Освітлення', val: `Увімкнено: ${lightsOn}`,
@@ -41,8 +41,8 @@
     { icon: 'mdi:thermometer', color: '#ff9f0a', name: 'Клімат', val: temps.length ? `${num(avg(temps), 1)}° | ${Math.round(avg(hums))}%` : '—',
       act: () => list('Клімат', () => [...all().filter((s) => s.entity_id.startsWith('climate.')), ...all().filter((s) => s.entity_id.endsWith('_temperatura'))].map((s) => s.entity_id), '', true) },
     { icon: 'mdi:fire', color: '#ff6b35', name: 'Котел', act: () => open('sensor.kotel_temperatura_podachi'), val: isFinite(val('sensor.kotel_temperatura_podachi')) ? `${num(val('sensor.kotel_temperatura_podachi'), 1)}° • ${num(val('sensor.kotel_tysk'), 1)} бар` : '—' },
-    { icon: 'mdi:battery-alert-variant-outline', color: lowBat ? '#ff453a' : '#30d158', name: 'Батарейки', val: lowBat ? `Розряджено: ${lowBat}` : 'Все добре',
-      act: () => list('Батарейки', () => all().filter((s) => s.attributes?.device_class === 'battery' && !s.entity_id.includes('sm_s928b')).sort((a, b) => (Number(a.state) || 0) - (Number(b.state) || 0)).map((s) => s.entity_id), 'Пристроїв з батарейками немає', true) },
+    { icon: 'mdi:battery-alert-variant-outline', color: lowBat ? '#ff453a' : '#30d158', name: 'Батарейки', val: lowBat ? `Потребують уваги: ${lowBat}` : 'Все добре',
+      act: () => list('Батарейки', () => all().filter((s) => s.attributes?.device_class === 'battery' && !s.entity_id.includes('sm_s928b')).sort((a, b) => (Number(a.state) || 0) - (Number(b.state) || 0)).map((s) => s.entity_id), 'Пристроїв з батарейками немає', true, true) },
   ]);
 </script>
 

@@ -27,24 +27,29 @@
 
   const seen = $derived(settings.notif_seen || 0);
   const unread = $derived(items.filter((n) => n.t > seen).length + Object.keys(system).length);
+  // панель випадає з-під дзвіночка; переносимо її в <body>, щоб жоден батьківський блок не зсував і не обрізав
+  let bellEl = $state();
+  let top = $state(70);
+  function portal(node) { document.body.appendChild(node); return { destroy() { node.remove(); } }; }
   function show() {
+    top = Math.max(12, Math.round((bellEl?.getBoundingClientRect().bottom ?? 60) + 8));
     open = true; pushLayer(() => (open = false));
     settings.notif_seen = Date.now(); saveSettings();
   }
   const sys = $derived(Object.values(system).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')));
 </script>
 
-<button class="bell" onclick={show} aria-label="Сповіщення">
+<button class="bell" bind:this={bellEl} onclick={show} aria-label="Сповіщення">
   <Icon name={unread ? 'mdi:bell-badge' : 'mdi:bell-outline'} size={24} />
   {#if unread}<span class="cnt">{unread > 99 ? '99+' : unread}</span>{/if}
 </button>
 
 {#if big}
-  <div class="photo" onclick={back} role="presentation"><img src={big} alt="" /></div>
+  <div class="photo" use:portal onclick={back} role="presentation"><img src={big} alt="" /></div>
 {/if}
 {#if open}
-  <div class="backdrop" onclick={back} role="presentation"></div>
-  <div class="sheet" role="dialog" aria-modal="true">
+  <div class="backdrop" use:portal onclick={back} role="presentation"></div>
+  <div class="sheet" use:portal role="dialog" aria-modal="true" style="--top:{top}px">
     <header><b>Сповіщення</b><button onclick={back} aria-label="Закрити"><Icon name="mdi:close" /></button></header>
     <div class="body">
       {#if sys.length}
@@ -74,11 +79,16 @@
   .bell { all: unset; cursor: pointer; position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--tile); }
   .cnt { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; box-sizing: border-box; }
   .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 55; }
-  .sheet { position: fixed; z-index: 56; left: 50%; bottom: 0; transform: translateX(-50%); width: min(620px, 100vw); height: min(88vh, 860px);
-    background: var(--bg-sheet); border-radius: 28px 28px 0 0; display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom); }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 8px; font-size: 20px; }
+  .sheet { position: fixed; z-index: 56; top: var(--top); right: 12px; left: 12px; max-height: calc(100dvh - var(--top) - 12px - env(safe-area-inset-bottom));
+    background: var(--bg-sheet); border-radius: 22px; display: flex; flex-direction: column; box-shadow: 0 18px 50px rgba(0,0,0,.55);
+    animation: drop .16s ease-out; transform-origin: top right; }
+  .sheet::before { content: ''; position: absolute; top: -7px; right: 20px; width: 14px; height: 14px; background: var(--bg-sheet); transform: rotate(45deg); border-radius: 3px; }
+  @media (min-width: 700px) { .sheet { left: auto; width: 440px; } }
+  @keyframes drop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+  .backdrop { background: rgba(0,0,0,.35) !important; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 6px 18px; font-size: 18px; }
   header button { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--pw); }
-  .body { overflow-y: auto; padding: 4px 16px 20px; }
+  .body { overflow-y: auto; padding: 4px 12px 14px; overscroll-behavior: contain; }
   h3 { margin: 14px 2px 8px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   .it { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: var(--tile); border-radius: 16px; margin-bottom: 6px; }
   .it.new { box-shadow: inset 3px 0 0 var(--accent); }

@@ -56,8 +56,16 @@ export function openDevice(device) {
 }
 export function closeSheet() { back(); }
 
+// остання натиснута кнопка — щоб на ПК відкривати вікно біля неї, а не знизу
+let lastRect = null;
+if (typeof window !== 'undefined') {
+  addEventListener('pointerdown', (e) => {
+    const el = e.target?.closest?.('button, [role="button"], .tile');
+    lastRect = el ? el.getBoundingClientRect() : null;
+  }, true);
+}
 export function openList(list) {
-  ui.list = list;
+  ui.list = { ...list, anchor: lastRect };
   pushLayer(() => { ui.list = null; });
 }
 
