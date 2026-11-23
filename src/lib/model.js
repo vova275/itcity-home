@@ -54,7 +54,20 @@ export function buildDevices(ha) {
       registry: ents,
     });
   }
-  return mergeTwins(mergeOrphans(out, ha), ha);
+  return attach(mergeTwins(mergeOrphans(out, ha), ha));
+}
+
+/** Хелпери, які логічно належать пристрою (сутність → головна сутність пристрою-господаря). */
+const ATTACH = { 'input_boolean.prana_ruchnyi': 'fan.prana_dytiacha' };
+function attach(list) {
+  for (const [eid, hostEid] of Object.entries(ATTACH)) {
+    const i = list.findIndex((d) => d.id === 'entity:' + eid);
+    const host = list.find((d) => d.entities.includes(hostEid));
+    if (i < 0 || !host) continue;
+    host.entities.push(eid); host.registry.push(...list[i].registry);
+    list.splice(i, 1);
+  }
+  return list;
 }
 
 /** Один фізичний пристрій, який бачать кілька інтеграцій (Cast + Android TV Remote): однакова назва і кімната → один. */

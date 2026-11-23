@@ -88,14 +88,50 @@ export function connect() {
       if (p) { pending.delete(msg.id); msg.success ? p.resolve(msg.result) : p.reject(new Error(msg.error?.message || 'error')); }
       return;
     }
+    if (msg.type === 'pong') { const p = pending.get(msg.id); if (p) { pending.delete(msg.id); p.resolve(); } return; }
     if (msg.type === 'event') subscriptions.get(msg.id)?.(msg.event);
   };
-  ws.onclose = () => {
-    ha.connected = false;
-    for (const p of pending.values()) p.reject(new Error('disconnected'));
-    pending.clear(); subscriptions.clear();
-    reconnectTimer = setTimeout(connect, 3000);
-  };
+  ws.onclose = () => dropped(3000);
+}
+
+function dropped(delay) {
+  ha.connected = false;
+  for (const p of pending.values()) p.reject(new Error('disconnected'));
+  pending.clear(); subscriptions.clear();
+  clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(connect, delay);
+}
+
+// Після згортання застосунку (телефон) з'єднання часто «мертве», хоча виглядає відкритим.
+// Повертаємось на екран → пінг; немає відповіді за 3 с → одразу нове з'єднання.
+function revive() {
+  if (!ws || ws.readyState === 2 || ws.readyState === 3) { if (!ws || !ha.connected) connect(); return; }
+  if (ws.readyState !== 1) return;
+  const id = nextId++, sock = ws;
+  let ok = false;
+  pending.set(id, { resolve: () => { ok = true; }, reject: () => {} });
+  try { sock.send(JSON.stringify({ type: 'ping', id })); } catch {}
+  setTimeout(() => {
+    if (ok || sock !== ws) return;
+    pending.delete(id);
+    sock.onclose = null; sock.onmessage = null;
+    try { sock.close(); } catch {}
+    dropped(0);
+  }, 3000);
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) revive(); });
+  addEventListener('pageshow', (e) => { if (e.persisted) revive(); });
+  addEventListener('online', revive);
+}
+
+/** Чекає з'єднання з HA (до timeout мс). */
+export function whenConnected(timeout = 15000) {
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    const chk = () => (ha.connected && ws?.readyState === 1 ? resolve() : Date.now() - t0 > timeout ? reject(new Error('Немає зв’язку з HA')) : setTimeout(chk, 200));
+    chk();
+  });
 }
 
 let regTimer;

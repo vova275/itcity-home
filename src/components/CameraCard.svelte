@@ -3,7 +3,7 @@
   // тап — живе відео HLS (camera/stream + hls.js, на iOS нативно) на весь екран.
   import Icon from './Icon.svelte';
   import Hls from 'hls.js';
-  import { ha, send } from '../lib/ha.svelte.js';
+  import { ha, send, whenConnected } from '../lib/ha.svelte.js';
   import { pushLayer, back } from '../lib/ui.svelte.js';
 
   let { entity, name = null } = $props();
@@ -17,6 +17,7 @@
     let h = null, dead = false, timer;
     const start = async () => {
       try {
+        await whenConnected();
         const r = await send({ type: 'camera/stream', entity_id: entity, format: 'hls' });
         if (dead) return;
         if (!Hls.isSupported() && el.canPlayType('application/vnd.apple.mpegurl')) { el.src = r.url; error = ''; return; }
@@ -25,14 +26,26 @@
         h.loadSource(r.url); h.attachMedia(el);
         h.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) { h.destroy(); h = null; timer = setTimeout(start, 4000); } });
         error = '';
-      } catch { error = 'Камера недоступна'; timer = setTimeout(start, 10000); }
+      } catch { if (dead) return; error = 'Камера недоступна, пробую ще…'; timer = setTimeout(start, 3000); }
     };
+    // повернулись у застосунок з відкритою камерою — відео після сну стоїть, запускаємо заново
+    let hiddenAt = 0;
+    const vis = () => {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      if (hiddenAt && Date.now() - hiddenAt > 5000) { clearTimeout(timer); h?.destroy(); h = null; el.removeAttribute('src'); start(); }
+    };
+    document.addEventListener('visibilitychange', vis);
     start();
-    return () => { dead = true; clearTimeout(timer); h?.destroy(); el.removeAttribute('src'); };
+    return () => { dead = true; document.removeEventListener('visibilitychange', vis); clearTimeout(timer); h?.destroy(); el.removeAttribute('src'); };
   }
   let tick = $state(0);
   let loaded = $state(false);
-  $effect(() => { const t = setInterval(() => { if (!document.hidden) tick++; }, 30000); return () => clearInterval(t); });
+  $effect(() => {
+    const t = setInterval(() => { if (!document.hidden) tick++; }, 30000);
+    const v = () => { if (!document.hidden) tick++; };   // свіжий кадр одразу після повернення в застосунок
+    document.addEventListener('visibilitychange', v);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', v); };
+  });
   let frame = $state('');
   $effect(() => {
     tick;
