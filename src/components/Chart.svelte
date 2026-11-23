@@ -41,12 +41,17 @@
   });
   const unit = $derived(lines.length ? unitOf(lines[0]) : '');
 
-  function toggleLine(e) {
-    if (lines.includes(e)) lines = lines.filter((x) => x !== e);
-    else if (lines.length && unitOf(e) !== unit) lines = [e];      // інша одиниця — новий графік
-    else lines = [...lines, e].slice(-6);
-    entity = lines[0] ?? bars[0];
+  // тап — показати лише цей параметр; «+» — накласти до вже вибраних (тільки та сама одиниця)
+  function pickLine(e) {
+    lines = lines.length === 1 && lines[0] === e ? lines : [e];
+    entity = e;
   }
+  function addLine(ev, e) {
+    ev.stopPropagation();
+    lines = lines.includes(e) ? (lines.length > 1 ? lines.filter((x) => x !== e) : lines) : [...lines, e].slice(-6);
+    entity = lines[0];
+  }
+  const canAdd = (e) => lines.length && !lines.includes(e) && unitOf(e) && unitOf(e) === unit;
   function toggleBar(e) {
     bars = bars.includes(e) ? bars.filter((x) => x !== e) : [...bars, e].slice(-6);
     entity = lines[0] ?? bars[0];
@@ -224,13 +229,15 @@
 {#if numeric.length + onoff.length > 1}
   <div class="pick">
     {#if numeric.length}
-      <div class="grp">Значення <span>· можна накласти кілька з однаковою одиницею</span></div>
+      <div class="grp">Значення <span>· «+» — накласти на графік (лише та сама одиниця)</span></div>
       <div class="chips">
         {#each numeric as c (c)}
           {@const i = lines.indexOf(c)}
-          <button class:sel={i >= 0} class:other={i < 0 && lines.length && unitOf(c) !== unit} style={i >= 0 ? `--c:${COLORS[i % COLORS.length]}` : ''} onclick={() => toggleLine(c)}>
-            <i></i>{label(c)}{#if unitOf(c)}<small>{unitOf(c)}</small>{/if}
-          </button>
+          <div class="chip" class:sel={i >= 0} style={i >= 0 ? `--c:${COLORS[i % COLORS.length]}` : ''}>
+            <button class="main" onclick={() => pickLine(c)}><i></i>{label(c)}{#if unitOf(c)}<small>{unitOf(c)}</small>{/if}</button>
+            {#if canAdd(c)}<button class="add" onclick={(ev) => addLine(ev, c)} aria-label="Накласти">+</button>
+            {:else if i >= 0 && lines.length > 1}<button class="add" onclick={(ev) => addLine(ev, c)} aria-label="Прибрати">×</button>{/if}
+          </div>
         {/each}
       </div>
     {/if}
@@ -317,6 +324,13 @@
   .pick { display: grid; gap: 4px; margin-bottom: 8px; }
   .grp { font-size: 12px; font-weight: 600; margin: 4px 2px 2px; } .grp span { color: var(--muted); font-weight: 400; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: flex; align-items: stretch; border-radius: 14px; background: var(--tile); font-size: 13px; overflow: hidden; }
+  .chip.sel { background: color-mix(in srgb, var(--c) 22%, var(--tile)); }
+  .chip .main { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 7px 11px; }
+  .chip .main small { color: var(--muted); font-size: 11px; }
+  .chip .main i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
+  .chip.sel .main i { background: var(--c); border-color: var(--c); }
+  .chip .add { all: unset; cursor: pointer; padding: 0 11px; display: grid; place-items: center; font-size: 17px; font-weight: 600; color: var(--accent); border-left: 1px solid var(--line); }
   .chips button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 14px; background: var(--tile); font-size: 13px; }
   .chips button small { color: var(--muted); font-size: 11px; }
   .chips button i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
