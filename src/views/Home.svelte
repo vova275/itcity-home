@@ -1,6 +1,7 @@
 <script>
   import Summary from '../components/Summary.svelte';
   import OutageCard from '../components/OutageCard.svelte';
+  import DeyeCard from '../components/DeyeCard.svelte';
   import CameraCard from '../components/CameraCard.svelte';
   import Favorites from '../components/Favorites.svelte';
   import Scenes from '../components/Scenes.svelte';
@@ -26,7 +27,7 @@
 
 <div class="duo">
   {#if hasOutage}
-    <section><h2>Світло від мережі</h2><OutageCard /></section>
+    <section><h2>Світло і батарея</h2><OutageCard /><DeyeCard /></section>
   {/if}
   {#if cameras.length}
     <section><h2>Камери</h2><div class="cams">{#each cameras as c (c)}<CameraCard entity={c} />{/each}</div></section>
