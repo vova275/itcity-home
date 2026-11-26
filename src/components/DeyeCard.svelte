@@ -25,6 +25,10 @@
   const onGrid = $derived(mains ? mains === 'on' : (grid ?? 0) > 50);
   const color = $derived(soc === null ? 'var(--muted)' : soc <= 20 ? '#ff453a' : soc <= 40 ? '#ffb020' : '#30d158');
   const batIcon = $derived(soc === null ? 'mdi:battery-unknown' : charging ? 'mdi:battery-charging' : `mdi:battery${soc >= 95 ? '' : '-' + Math.max(10, Math.round(soc / 10) * 10)}`);
+  // до повного: решта ємності / потужність заряду (ємність — з налаштування прогнозу; біля 100 % заряд сповільнюється)
+  const cap = $derived(n('input_number.deye_battery_capacity') ?? 16);
+  const toFull = $derived(charging && soc < 100 ? ((100 - soc) / 100 * cap * 1000) / Math.abs(bat) : null);
+  const fullAt = $derived(toFull === null ? '' : new Date(Date.now() + toFull * 3600000).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }));
   const progBad = $derived(prog?.startsWith('Не вистачить'));
   const progShow = $derived(prog && !['unknown', 'unavailable', 'Немає даних Deye'].includes(prog) && !prog.startsWith('Відключень'));
 </script>
@@ -53,6 +57,7 @@
       </div>
 
       <div class="row"><span>Доступно</span><b>{avail === null ? '—' : String(avail).replace('.', ',') + ' кВт·год'}</b></div>
+      {#if toFull !== null}<div class="row"><span>До повного заряду</span><b>≈ {h(toFull)} (о {fullAt})</b></div>{/if}
       <div class="row"><span>{onGrid ? 'Без мережі вистачить на' : 'Вистачить ще на'}</span><b>{h(hours)}</b></div>
       {#if progShow}<div class="prog" class:warn={progBad}>{progBad ? '⚠️ ' : '✅ '}Найближче відключення: {prog.replace(' ⚠️', '')}</div>{/if}
     {/if}
