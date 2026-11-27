@@ -12,7 +12,7 @@
   // Deye міряє будинок і під час відключень (лічильник на вводі тоді без живлення) — графік за замовчуванням з нього
   const hasDeye = $derived(!!ha.states['sensor.deye_load_consumption_power']);
   const DEYE = ['sensor.deye_load_consumption_power', 'sensor.deye_battery', 'sensor.deye_battery_power', 'sensor.deye_grid_power',
-    'sensor.deye_battery_temperature', 'sensor.deye_load_consumption_l1_power', 'sensor.deye_load_consumption_l2_power', 'sensor.deye_load_consumption_l3_power'];
+    'sensor.deye_battery_temperature', 'sensor.deye_vid_batarei_za_den', 'sensor.deye_vid_batarei_za_misiats', 'sensor.deye_load_consumption_l1_power', 'sensor.deye_load_consumption_l2_power', 'sensor.deye_load_consumption_l3_power'];
   const pseudo = $derived({
     id: 'energy', device: null, name: 'Енергія', area_id: null, main: hasDeye ? DEYE[0] : 'sensor.lichylnyk_potuzhnist', registry: [],
     entities: [...(hasDeye ? DEYE : []), 'sensor.lichylnyk_potuzhnist', ...phases.flatMap((p) => [`sensor.lichylnyk_potuzhnist_l${p}`, `sensor.lichylnyk_napruga_l${p}`, `sensor.lichylnyk_strum_l${p}`]),
@@ -63,7 +63,7 @@
 <h2>Батарея</h2>
 <div class="acc">
   <div class="c"><small>Сьогодні заряджено</small><b>{n('sensor.deye_today_battery_charge', 1)} кВт·год</b><span>з мережі {n('sensor.deye_today_energy_import', 1)} кВт·год</span></div>
-  <div class="c"><small>Сьогодні віддала будинку</small><b>{n('sensor.deye_today_battery_discharge', 1)} кВт·год</b><span>втрати інвертора {n('sensor.deye_today_losses', 1)} кВт·год</span></div>
+  <div class="c"><small>Будинок від батареї</small><b>{n('sensor.deye_today_battery_discharge', 1)} кВт·год</b><span>сьогодні · за місяць {n('sensor.deye_vid_batarei_za_misiats', 1)} кВт·год</span></div>
 </div>
 {/if}
 
