@@ -1,7 +1,7 @@
 <script>
   // Deye + батарея (інтеграція Solarman): заряд, звідки живлення, потоки енергії, на скільки вистачить.
   import Icon from './Icon.svelte';
-  import { ha } from '../lib/ha.svelte.js';
+  import { ha, callService } from '../lib/ha.svelte.js';
 
   const st = (e) => ha.states[e]?.state;
   const n = (e) => { const v = parseFloat(st(e)); return Number.isFinite(v) ? v : null; };
@@ -30,6 +30,12 @@
   const toFull = $derived(charging && soc < 100 ? ((100 - soc) / 100 * cap * 1000) / Math.abs(bat) : null);
   const fullAt = $derived(toFull === null ? '' : new Date(Date.now() + toFull * 3600000).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }));
   const progBad = $derived(prog?.startsWith('Не вистачить'));
+  // «Економний заряд»: з мережі — вночі; вдень лише резерв (packages/deye_ekonom.yaml)
+  const ekon = $derived(st('input_boolean.deye_ekonom') === 'on');
+  const rez = $derived(n('input_number.deye_ekonom_rezerv') ?? 50);
+  const hasEkon = $derived(!!ha.states['input_boolean.deye_ekonom']);
+  const toggleEkon = () => callService('input_boolean', ekon ? 'turn_off' : 'turn_on', {}, { entity_id: 'input_boolean.deye_ekonom' });
+  const setRez = (d) => callService('input_number', 'set_value', { value: Math.min(100, Math.max(30, rez + d)) }, { entity_id: 'input_number.deye_ekonom_rezerv' });
   // зрозуміле пояснення прогнозу: коли, скільки триватиме, скільки треба, що залишиться
   const need = $derived(ha.states['sensor.prohnoz_na_vidkliuchennia']?.attributes?.potribno_kwh ?? null);
   const dur = $derived(n('sensor.naiblyzhche_vidkliuchennia_tryvalist'));
@@ -72,6 +78,15 @@
       <div class="row"><span>Доступно</span><b>{avail === null ? '—' : String(avail).replace('.', ',') + ' кВт·год'}</b></div>
       {#if toFull !== null}<div class="row"><span>До повного заряду</span><b>≈ {h(toFull)} (о {fullAt})</b></div>{/if}
       <div class="row"><span>{onGrid ? 'Без мережі вистачить на' : 'Вистачить ще на'}</span><b>{h(hours)}</b></div>
+      {#if hasEkon}
+        <div class="ek">
+          <button class="sw" class:on={ekon} onclick={toggleEkon} aria-label="Економний заряд"><i></i></button>
+          <div class="grow"><b>Заряджати вночі (дешевше)</b>
+            <small>{ekon ? `Удень тримає ${Math.round(rez)}%, решту добирає після 23:00. За 3 год до відключення — до 100%.` : 'Вимкнено: заряджає до 100% одразу, коли є світло.'}</small>
+          </div>
+          {#if ekon}<div class="rz"><button onclick={() => setRez(-10)}>−</button><span>{Math.round(rez)}%</span><button onclick={() => setRez(10)}>+</button></div>{/if}
+        </div>
+      {/if}
       {#if progShow}
         <div class="prog" class:warn={progBad}>
           <b>{when}{dur ? `, на ${h(dur)}` : ''}</b>
@@ -100,6 +115,14 @@
   .row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 2px; border-top: 1px solid var(--line); }
   .row span { color: var(--muted); }
   .row .cold { color: #64d2ff; } .row .hot { color: #ff453a; }
+  .ek { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 2px 2px; border-top: 1px solid var(--line); }
+  .ek b { font-size: 14px; font-weight: 600; } .ek small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .sw { all: unset; cursor: pointer; flex: none; width: 46px; height: 28px; border-radius: 99px; background: var(--pw); position: relative; transition: background .2s; }
+  .sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .2s; }
+  .sw.on { background: #30d158; } .sw.on i { left: 21px; }
+  .rz { display: flex; align-items: center; gap: 6px; flex: none; }
+  .rz button { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; background: var(--pw); display: grid; place-items: center; font-size: 18px; }
+  .rz span { min-width: 38px; text-align: center; font-weight: 700; }
   .prog { margin-top: 8px; font-size: 13px; line-height: 1.45; padding: 8px 10px; border-radius: 12px; background: rgba(48,209,88,.15); }
   .prog.warn { background: rgba(255,69,58,.18); }
 </style>
