@@ -30,6 +30,19 @@
   const toFull = $derived(charging && soc < 100 ? ((100 - soc) / 100 * cap * 1000) / Math.abs(bat) : null);
   const fullAt = $derived(toFull === null ? '' : new Date(Date.now() + toFull * 3600000).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }));
   const progBad = $derived(prog?.startsWith('Не вистачить'));
+  // зрозуміле пояснення прогнозу: коли, скільки триватиме, скільки треба, що залишиться
+  const need = $derived(ha.states['sensor.prohnoz_na_vidkliuchennia']?.attributes?.potribno_kwh ?? null);
+  const dur = $derived(n('sensor.naiblyzhche_vidkliuchennia_tryvalist'));
+  const nextAt = $derived(st('sensor.svitlo_nastupne_vidkliuchennia'));
+  const when = $derived.by(() => {
+    if (!onGrid) return 'Поточне відключення';
+    if (!nextAt || ['unknown', 'unavailable'].includes(nextAt)) return 'Найближче відключення';
+    const d = new Date(nextAt), t = d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+    const day = d.toDateString() === new Date().toDateString() ? 'сьогодні' : 'завтра';
+    return `Відключення ${day} о ${t}`;
+  });
+  const leftSoc = $derived(need !== null && soc !== null ? Math.max(0, Math.round(soc - need / (cap * (n('input_number.deye_efficiency') ?? 92) / 100) * 100)) : null);
+  const kwh = (x) => (Math.round(x * 10) / 10).toString().replace('.', ',') + ' кВт·год';
   const progShow = $derived(prog && !['unknown', 'unavailable', 'Немає даних Deye'].includes(prog) && !prog.startsWith('Відключень'));
 </script>
 
@@ -59,7 +72,15 @@
       <div class="row"><span>Доступно</span><b>{avail === null ? '—' : String(avail).replace('.', ',') + ' кВт·год'}</b></div>
       {#if toFull !== null}<div class="row"><span>До повного заряду</span><b>≈ {h(toFull)} (о {fullAt})</b></div>{/if}
       <div class="row"><span>{onGrid ? 'Без мережі вистачить на' : 'Вистачить ще на'}</span><b>{h(hours)}</b></div>
-      {#if progShow}<div class="prog" class:warn={progBad}>{progBad ? '⚠️ ' : '✅ '}Найближче відключення: {prog.replace(' ⚠️', '')}</div>{/if}
+      {#if progShow}
+        <div class="prog" class:warn={progBad}>
+          <b>{when}{dur ? `, на ${h(dur)}` : ''}</b>
+          {#if need !== null && avail !== null}
+            <div>Треба ≈ {kwh(need)}, у батареї {kwh(avail)}</div>
+            <div>{progBad ? `⚠️ Не вистачить ≈ ${kwh(need - avail)} — економте світло` : `✅ Вистачить, залишиться ≈ ${kwh(avail - need)}${leftSoc !== null ? ` (заряд ~${leftSoc}%)` : ''}`}</div>
+          {:else}<div>{prog}</div>{/if}
+        </div>
+      {/if}
     {/if}
   </div>
 {/if}
@@ -79,6 +100,6 @@
   .row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 2px; border-top: 1px solid var(--line); }
   .row span { color: var(--muted); }
   .row .cold { color: #64d2ff; } .row .hot { color: #ff453a; }
-  .prog { margin-top: 8px; font-size: 13px; padding: 8px 10px; border-radius: 12px; background: rgba(48,209,88,.15); }
+  .prog { margin-top: 8px; font-size: 13px; line-height: 1.45; padding: 8px 10px; border-radius: 12px; background: rgba(48,209,88,.15); }
   .prog.warn { background: rgba(255,69,58,.18); }
 </style>
