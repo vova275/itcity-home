@@ -44,7 +44,6 @@
           <div class="big">Батарея {Math.round(soc)}%</div>
           <div class="sub">
             {#if charging}Заряджається · {kw(bat)}{:else if discharging}Розряджається · {kw(bat)}{:else}Очікує{/if}
-            {#if temp !== null} · {temp.toFixed(0)}°{/if}
           </div>
         </div>
       </div>
@@ -56,6 +55,7 @@
         <div class="f"><Icon name="mdi:home-lightning-bolt" size={20} /><b>{kw(load)}</b><span>Будинок</span></div>
       </div>
 
+      {#if temp !== null}<div class="row"><span>Температура батареї</span><b class:cold={temp < 5} class:hot={temp > 45}>{temp.toFixed(1).replace('.', ',')} °C{temp < 5 ? ' · холодна, заряд обмежено' : temp > 45 ? ' · гаряча' : ''}</b></div>{/if}
       <div class="row"><span>Доступно</span><b>{avail === null ? '—' : String(avail).replace('.', ',') + ' кВт·год'}</b></div>
       {#if toFull !== null}<div class="row"><span>До повного заряду</span><b>≈ {h(toFull)} (о {fullAt})</b></div>{/if}
       <div class="row"><span>{onGrid ? 'Без мережі вистачить на' : 'Вистачить ще на'}</span><b>{h(hours)}</b></div>
@@ -78,6 +78,7 @@
   .f b { font-size: 15px; } .f span { font-size: 12px; color: var(--muted); }
   .row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 2px; border-top: 1px solid var(--line); }
   .row span { color: var(--muted); }
+  .row .cold { color: #64d2ff; } .row .hot { color: #ff453a; }
   .prog { margin-top: 8px; font-size: 13px; padding: 8px 10px; border-radius: 12px; background: rgba(48,209,88,.15); }
   .prog.warn { background: rgba(255,69,58,.18); }
 </style>
