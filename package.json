@@ -1,6 +1,6 @@
 {
   "name": "itcity-home",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "Зручний дашборд у стилі Homey для Home Assistant: кімнати, плитки, картки пристроїв з графіками.",
   "license": "MIT",
   "type": "module",
