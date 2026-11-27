@@ -35,6 +35,8 @@
   const rez = $derived(n('input_number.deye_ekonom_rezerv') ?? 50);
   const hasEkon = $derived(!!ha.states['input_boolean.deye_ekonom']);
   const toggleEkon = () => callService('input_boolean', ekon ? 'turn_off' : 'turn_on', {}, { entity_id: 'input_boolean.deye_ekonom' });
+  const useBat = $derived(st('input_boolean.deye_batareia_pry_svitli') === 'on');
+  const toggleUse = () => callService('input_boolean', useBat ? 'turn_off' : 'turn_on', {}, { entity_id: 'input_boolean.deye_batareia_pry_svitli' });
   const setRez = (d) => callService('input_number', 'set_value', { value: Math.min(100, Math.max(30, rez + d)) }, { entity_id: 'input_number.deye_ekonom_rezerv' });
   // зрозуміле пояснення прогнозу: коли, скільки триватиме, скільки треба, що залишиться
   const need = $derived(ha.states['sensor.prohnoz_na_vidkliuchennia']?.attributes?.potribno_kwh ?? null);
@@ -80,12 +82,20 @@
       <div class="row"><span>{onGrid ? 'Без мережі вистачить на' : 'Вистачить ще на'}</span><b>{h(hours)}</b></div>
       {#if hasEkon}
         <div class="ek">
-          <button class="sw" class:on={ekon} onclick={toggleEkon} aria-label="Економний заряд"><i></i></button>
-          <div class="grow"><b>Заряджати вночі (дешевше)</b>
-            <small>{ekon ? `Удень тримає ${Math.round(rez)}%, решту добирає після 23:00. За 3 год до відключення — до 100%.` : 'Вимкнено: заряджає до 100% одразу, коли є світло.'}</small>
+          <button class="sw" class:on={ekon} onclick={toggleEkon} aria-label="Заряджати лише вночі"><i></i></button>
+          <div class="grow"><b>Заряджати лише вночі</b>
+            <small>{ekon ? 'З мережі — після 23:00 (дешевше). За 3 год до відключення — до 100%.' : 'Вимкнено: заряджає до 100% одразу, коли є світло.'}</small>
           </div>
-          {#if ekon}<div class="rz"><button onclick={() => setRez(-10)}>−</button><span>{Math.round(rez)}%</span><button onclick={() => setRez(10)}>+</button></div>{/if}
         </div>
+        {#if ekon}
+          <div class="ek sub2">
+            <button class="sw" class:on={useBat} onclick={toggleUse} aria-label="Живити будинок від батареї при світлі"><i></i></button>
+            <div class="grow"><b>Від батареї, навіть коли є світло</b>
+              <small>{useBat ? `Удень будинок живиться від батареї до ${Math.round(rez)}%, далі — від мережі.` : 'Вимкнено: при світлі батарея вдень стоїть — не заряджається і не розряджається.'}</small>
+            </div>
+            {#if useBat}<div class="rz"><button onclick={() => setRez(-10)}>−</button><span>{Math.round(rez)}%</span><button onclick={() => setRez(10)}>+</button></div>{/if}
+          </div>
+        {/if}
       {/if}
       {#if progShow}
         <div class="prog" class:warn={progBad}>
@@ -117,6 +127,7 @@
   .row .cold { color: #64d2ff; } .row .hot { color: #ff453a; }
   .ek { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 2px 2px; border-top: 1px solid var(--line); }
   .ek b { font-size: 14px; font-weight: 600; } .ek small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .ek.sub2 { border-top: none; padding-top: 4px; }
   .sw { all: unset; cursor: pointer; flex: none; width: 46px; height: 28px; border-radius: 99px; background: var(--pw); position: relative; transition: background .2s; }
   .sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .2s; }
   .sw.on { background: #30d158; } .sw.on i { left: 21px; }
